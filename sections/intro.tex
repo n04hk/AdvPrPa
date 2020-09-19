@@ -1,0 +1,181 @@
+%!TEX root = ../AdvPrPa.tex
+\section{Introduction}
+\begin{multicols}{2}
+\subsection{Programming Paradigms}
+\textit{Paradigm}: (definitions from Merriam-Webster)
+\begin{itemize}
+  \item a theory or group of ideas about how something should be done, made, or thought about
+  \item example, pattern; especially: an outstandingly clear or typical example or archetype (a perfect example of something)
+\end{itemize}
+\textit{Programmin Paradigm}: fundamental style of programming
+\begin{itemize}
+  \item In which notions do we think about a program?
+  \item Which aspects can be \textbf{explicitly} described, which cannot?
+  \begin{itemize}
+    \item state
+    \item concurrency and parallelism
+    \item nondeterminism
+  \end{itemize}
+\end{itemize}
+
+Software quality: (according to Bertrand Meyer)
+\begin{itemize}
+  \item reliability
+  \begin{itemize}
+    \item \textbf{correctness}
+    \item robustness
+  \end{itemize}
+  \item modularity
+  \begin{itemize}
+    \item extendibility
+    \item reusability
+  \end{itemize}
+  \item compatibility, efficiency, portability, ease of use, timeliness
+\end{itemize}
+
+\subsubsection{Imperative Programming}
+\begin{itemize}
+  \item based on explicitly reading and updating \textbf{state}
+  \item immediate abstraction of von Neumann computer
+  \item theoretical base: \textit{Turing} machine
+  \item concepts:
+  \begin{itemize}
+    \item data structures: variables, records, arrays, pointers
+    \item computation:
+    \begin{itemize}
+      \item expressions:\\
+      literal, identifier, operation, function call
+      \item commands (instructions, ''statements''):\\
+      assignment, composition, goto, conditional, loop, procedure call
+    \end{itemize}
+    \item abstraction: functions, procedures
+  \end{itemize}
+  \item examples: Ada, Algol, C, Cobol, Fortran, Moudla, Pascal
+\end{itemize}
+
+\subsubsection{Object-Oriented Programming}
+\begin{itemize}
+  \item strongly based on imperative paradigm
+  \item further support for abstraction and modularization
+  \begin{itemize}
+    \item Abstract Data Types (ADTs)
+    \item information hiding
+  \end{itemize}
+  \item concepts:
+  \begin{itemize}
+    \item objects as instances of classes: data $+$ procedures put together
+    \item encapsulation (private, protected, public)
+    \item inheritance for modularity and for variant records
+    \item subtyping, polymorphism and dynamic binding
+    \item genericity (from some imperative and most functional languages)
+  \end{itemize}
+  \item examples: C++, C\#, Eiffer, Java, Objective-C, Simula, Smalltalk
+\end{itemize}
+
+\subsubsection{Functional Programming}
+\begin{itemize}
+  \item based on $\lambda$-calculus and reduction
+  \item subexpressions are replaced by simpler, but equivalent subexpressions until no longer possible
+  \item concepts:
+  \begin{itemize}
+    \item no state, no commands; just expression
+    \item identifiers denote values, not variables (storage cells)
+    \item no commands implies no loops; just recursion
+    \item functions: recursive, anonymous, curried, higher-order (DSLs)
+    \item recursive algebraic data types and pattern matching
+    \item polymorphic and overloaded types
+    \item type inference
+    \item eager or lazy evaluation
+    \item simple equational reasoning about programs
+  \end{itemize}
+  \item examples: F\#, Haskell, Lisp, ML, OCaml
+\end{itemize}
+
+\subsubsection{Logic Programming}
+\begin{itemize}
+  \item based on first-order logic (predicate logic)
+  \item logical formulas express relations declaratively
+  \item machine solves formulas through resolution
+  \item works for specialized formulas like \textit{HORN} clauses
+  \item efficient only if programmer guides the solution process
+  \item example: Prolog
+\end{itemize}
+
+\subsubsection{Further Programming Paradigms}
+\begin{itemize}
+  \item constraint programming
+  \item concurrent programming
+  \item parallel programming
+\end{itemize}
+
+\subsubsection{Multiparadigm Programming}
+\begin{itemize}
+  \item several paradigms can be combined into a single language
+  \item each paradigm has its realm; today's large applications embrace many such realms; a single language simplifies interoperability
+  \item examples:
+  \begin{itemize}
+    \item functional with imperative features: ML
+    \item object-oriented with functional features: C\#
+    \item functional with object-oriented features: F\#, OCaml
+    \item functional $+$ object-oriented: Scala
+    \item functional $+$ logic: Curry (based on Haskell)
+  \end{itemize}
+\end{itemize}
+
+\subsection{Correctness and Verification}
+\subsubsection{Correctness}
+\begin{itemize}
+  \item prime quality, \textit{conditio sine qua non}
+  \item relative notion: program should be correct with respect to its \textbf{specification}
+  \begin{itemize}
+    \item example: program that computes the sine perfectly well but should compute the root is clearly not correct
+  \end{itemize}
+  \item but how can one know whether a program is correct or not?
+  \begin{itemize}
+    \item by \textit{testing}, one can find faults (bugs)
+    \item by \textit{proving}, one can show the absence of faults
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Testing versus Proving}
+better: Tests \textbf{and} Proofs
+\begin{itemize}
+  \item testing
+  \begin{itemize}
+    \item choose particular input
+    \item determine correct result for that input using test oracle
+    \item run program under test on the chosen input
+    \item compare obtained and correct result
+    \begin{itemize}
+      \item if different: fault found
+      \item if equal: no relevant information obtained
+    \end{itemize}
+  \end{itemize}
+  \item proving
+  \begin{itemize}
+    \item do \textbf{not} choose a particular input
+    \item do \textbf{not} execute the program
+    \item instead apply mathematical rules to program and specification
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Verification As a Matter Of Course (VAMOC)}
+(according to Bertrand Meyer)
+\begin{itemize}
+  \item software controls more and more of our daily lives
+  \item software becomes more and more complicated
+  \item testing does not suffice; verification is needed in addition
+  \item verification tools become more and more powerful
+  \item examples: Spec\# and Dafny for specification and verification of object-oriented programs
+\end{itemize}
+
+\subsubsection{Types}
+\begin{itemize}
+  \item 'good' expressions can be typed at compile time
+  \item ill-typed expressions will not compile
+  \item thus corresponding run-time errors cannot occur
+  \item type checking and inference is mostly fully automatic
+  \item light-weight formal method
+  \item first step towards program verification
+\end{itemize}
+\end{multicols}
