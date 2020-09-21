@@ -1,5 +1,5 @@
 % Genereller Header
-\documentclass[10pt,twoside,a4paper,fleqn]{article}
+\documentclass[titlepage=true]{scrartcl}
 \usepackage[left=1cm,right=1cm,top=1cm,bottom=1cm,includeheadfoot]{geometry}
 \usepackage[english]{babel}
 \usepackage[utf8]{inputenc}
@@ -18,7 +18,7 @@
 \usepackage{verbatim}
 \usepackage{pdflscape} % landscape
 \usepackage{multirow} % zellen in tabellen verbinden
-\usepackage{multicol} 
+\usepackage{multicol}
 %\usepackage{slashbox} % getrennte zelle in tabelle
 \usepackage{enumitem}
 % \usepackage{array} % anordnung in tabellen
@@ -42,7 +42,7 @@
 	\begin{description}[noitemsep, nolistsep]\setlength{\itemsep}{0cm} \setlength{\parsep}{0cm} \setlength{\topsep}{0cm} \setlength{\parskip}{0cm}}
     {\end{description}}
 
-    
+
 \newcommand{\logd}[0]{\log_{10}}
 \newcommand{\subsubsubsection}[1]{\textbf{#1}}
 
@@ -113,8 +113,8 @@
 \pagestyle{fancy}
 \fancyhf{}
 %Linien oben und unten
-\renewcommand{\headrulewidth}{0.5pt} 
-\renewcommand{\footrulewidth}{0.5pt} 
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0.5pt}
 
 \fancyhead[L]{\titleinfo{ }- Summary}
 %Kopfzeile rechts bzw. aussen

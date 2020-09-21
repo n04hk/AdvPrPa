@@ -1,0 +1,88 @@
+%!TEX root = ../AdvPrPa.tex
+\section{Functional Programming}
+\begin{multicols}{2}
+\subsection{Correctness}
+(see \ref{sec:introCorrectness})
+
+\subsubsection{Obtaining Mathematical Knowledge}
+\begin{enumerate}
+  \item Conjecture\\
+  The product of all prime numbers between and including 2 and $p$, increased by 1, is again a prime number.
+  \item Examples\\
+  For $p = 2,3,5,7,11,379$ the conjecture is confirmed.
+  \item Counterexample\\
+  For $p=17$ the conjecture is refuted.
+\end{enumerate}
+
+\begin{enumerate}
+  \item Theorem\\
+  $(a+b)^2 = a^2 + 2ab + b^2$
+  \item Proof\\
+  $(a+b)^2 = (a+b)(a+b) = a(a+b) + b(a+b) = aa + ab + ba + bb = aa + ab + ab + bb = aa + 2ab + bb = a^2 + 2ab + b^2$
+  \item[\-] with a \textbf{finite} number of steps we have thus shown that something holds for an \textbf{infinite} number of values
+\end{enumerate}
+
+\subsubsection{Consequence}
+\begin{itemize}
+  \item programming languages should simplify proofs (and therefore also program development itself)
+  \item and thus may enhance program reliability
+\end{itemize}
+
+\subsection{Referential Transparency}
+\subsubsection{A More Formal Proof}
+\begin{align*}
+&(a+b)^2\\
+=& \{ \text{def square} \}\\
+&(a+b) \cdot (a+b)\\
+=& \{ \text{distri}\}\\
+&a \cdot (a+b) + b \cdot (a+b)\\
+=& \{ \text{distri twice}\}\\
+&a \cdot a + a \cdot b + b \cdot a + b \cdot b\\
+=& \{ \text{commu multi}\}\\
+&a \cdot a + a \cdot b + a \cdot b + b \cdot b\\
+=& \{ \text{neutral multi twice}\}\\
+&a \cdot a + 1 \cdot (a \cdot b) + 1 \cdot (a \cdot b) + b \cdot b\\
+=& \{ \text{distri}\}\\
+&a \cdot a + (1 + 1) \cdot (a \cdot b) + b \cdot b\\
+=& \{ \text{def 2}\}\\
+&a \cdot a + 2 \cdot (a \cdot b) + b \cdot b\\
+=& \{ \text{def square twice}\}\\
+&a^2 + 2ab + b^2
+\end{align*}
+\begin{itemize}
+  \item this proof sill handles associativity implicitly
+  \item this format for \textit{calculational proofs} is due to FEIJEN and DIJKSTRA
+  \item a corresponding \texttt{calc} statement is available in Dafny
+\end{itemize}
+
+\subsubsection{Equality}
+A fundamental mathematical concept
+\begin{itemize}
+  \item four inference rules of a logic
+  \item Reflexivity: $\frac{}{X=X}$
+  \item Symmetry: $\frac{X=Y}{Y=X}$
+  \item Transitivity: $\frac{X=Y,Y=Z}{X=Z}$
+  \item LEIBNIZ: $\frac{X=Y}{E[v\leftarrow X]=E[v\leftarrow Y]}$
+  \item $X,Y,Z,E$: expressions, $v$: variable, $E[v\leftarrow X]$: textual substitution of all (free) occurrences of $v$ by $(X)$ in $E$
+\end{itemize}
+
+\subsubsection{Example LEIBNIZ}
+\begin{itemize}
+  \item from numbers: $x \cdot (y + z) = x \cdot y + x \cdot z$
+  \item therefore, by LEIBNIZ (and Substitution):\\
+  \begin{align}
+    \underbrace{(a \cdot (a + b))} + b \cdot (a + b)
+  \end{align}
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+\end{multicols}
