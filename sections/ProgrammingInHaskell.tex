@@ -1,0 +1,165 @@
+%!TEX root = ../AdvPrPa.tex
+\section{Programming in Haskell}
+\begin{multicols}{2}
+\subsection{First Steps}
+\subsubsection{List functions}
+\begin{tabular}{|p{0.5\linewidth}|p{0.5\linewidth}|}
+  \hline
+  \textbf{input} & \textbf{output} \\
+  \hline
+  \lstinline|head [1,2,3,4,5]| & \lstinline|1| \\
+  \hline
+  \lstinline|tail [1,2,3,4,5]| & \lstinline|[2,3,4,5]| \\
+  \hline
+  \lstinline|[1,2,3,4,5] !! 2| & \lstinline|3| \\
+  \hline
+  \lstinline|take 3 [1,2,3,4,5]| & \lstinline|[1,2,3]| \\
+  \hline
+  \lstinline|drop 3 [1,2,3,4,5]| & \lstinline|[4,5]| \\
+  \hline
+  \lstinline|length [1,2,3,4,5]| & \lstinline|5| \\
+  \hline
+  \lstinline|sum [1,2,3,4,5]| & \lstinline|15| \\
+  \hline
+  \lstinline|product [1,2,3,4,5]| & \lstinline|120| \\
+  \hline
+  \lstinline|[1,2,3] ++ [4,5]| & \lstinline|[1,2,3,4,5]| \\
+  \hline
+  \lstinline|reverse [1,2,3,4,5]| & \lstinline|[5,4,3,2,1]| \\
+  \hline
+\end{tabular}
+
+\subsubsection{Function Application}
+In mathematics, function application is denoted using parentheses, and multiplication is often denoted using juxtaposition or space:\\
+$f(a,b) + c d$\\
+In Haskell, function application is denoted using space, and multiplication is denoted using $*$:\\
+\lstinline{f a b + c*d}\\
+Moreover, function application is assumed to have higher priority than all other operators:\\
+\begin{tabular}{|p{0.5\linewidth}|p{0.5\linewidth}|}
+    \hline
+    \lstinline|f a + b| & \lstinline|(f a) + b|, \textbf{not} \lstinline|f(a + b)|\\
+    \hline
+\end{tabular}
+
+Examples:\\
+\begin{tabular}{|p{0.5\linewidth}|p{0.5\linewidth}|}
+\hline
+\textbf{Mathematics} & \textbf{Haskell} \\
+\hline
+$f(x)$ & \lstinline|f x| \\
+$f(x,y)$ & \lstinline|f x y| \\
+$f(g(x))$ & \lstinline|f (g x)| \\
+$f(x,g(y))$ & \lstinline|f x (g y)| \\
+$f(x)g(y)$ & \lstinline|f x * g y| \\
+\hline
+\end{tabular}
+
+\subsubsection{Haskell Scripts}
+\begin{itemize}
+    \item As well as the functions in the standard library, you can also define your own functions
+    \item New functions are defined within a script, a text file comprising a sequence of definitions
+    \item By convention, Haskell scripts usually have a .hs suffix on their filename. This is not mandatory, but is useful for identification purposes.
+\end{itemize}
+
+\subsubsection{My First Script}
+\lstinputlisting{listings/test.hs}
+Note:
+\begin{itemize}
+    \item \lstinline{div} is enclosed in back quotes, not forward
+    \item \lstinline{x 'f' y} is just syntactic sugar for \lstinline{f x y}.
+\end{itemize}
+
+To start up GHCi with the script, type the following in a terminal:
+\begin{lstlisting}[language=bash]
+$ ghci test.hs
+\end{lstlisting}
+Now both the standard library and the file test.hs are loaded, and functions from both can be used:
+\begin{lstlisting}[language=bash]
+> quadruple 10
+40
+> take (double 2) [1,2,3,4,5,6]
+[1,2,3,4]
+\end{lstlisting}
+GHCi does not automatically detect that the script has been changed, so a \lstinline[language=bash]{reload} command must be executed before the new definitions can be used:
+\begin{lstlisting}[language=bash]
+> :reload
+Reading file "test.hs"
+\end{lstlisting}
+
+\subsubsection{Useful GHCi Commands}
+\begin{tabular}{|p{0.5\linewidth}|p{0.5\linewidth}|}
+  \hline
+  \textbf{Command} & \textbf{Meaning} \\
+  \hline
+  \lstinline[language=bash]|:load name| & load script \lstinline[language=bash]|name| \\
+  \lstinline[language=bash]|:reload| & reload current script \\
+  \lstinline[language=bash]|:set editor name| & set editor to \lstinline[language=bash]|name| \\
+  \lstinline[language=bash]|:edit name| & edit script \lstinline[language=bash]|name| \\
+  \lstinline[language=bash]|:edit| & edit current script \\
+  \lstinline[language=bash]|:type expr| & show type of \lstinline[language=bash]|expr| \\
+  \lstinline[language=bash]|:?| & show all commands \\
+  \lstinline[language=bash]|:quit| & quit GHCi \\
+  \hline
+\end{tabular}
+
+\subsubsection{Naming Requirements}
+\begin{itemize}
+  \item Function and argument names must begin with a lower-case letter:\\
+  \lstinline{myFun}, \lstinline{fun1}, \lstinline{arg_2}, \lstinline{x'}
+  \item By convention, list arguments usually have an s suffix on their name:\\
+  \lstinline{xs}, \lstinline{ns}, \lstinline{nss}
+\end{itemize}
+
+\subsubsection{The Layout Rule}
+In a sequence of definitions, each definition must begin in precisely the same column:
+\begin{multicols}{3}
+correct:
+\begin{lstlisting}
+a = 10
+b = 20
+c = 30
+\end{lstlisting}
+\vfill\null
+\columnbreak
+wrong:
+\begin{lstlisting}
+a = 10
+ b = 20
+c = 30
+\end{lstlisting}
+\vfill\null
+\columnbreak
+wrong:
+\begin{lstlisting}
+ a = 10
+b = 20
+ c = 30
+\end{lstlisting}
+\vfill\null
+\end{multicols}
+The layout rule avoids the need for explicit syntax to indicate the grouping of definitions.
+\begin{multicols}{2}
+implicit grouping:
+\begin{lstlisting}
+a = b + c
+    where
+      b = 1
+      c = 2
+d = a * 2
+\end{lstlisting}
+\vfill\null
+\columnbreak
+explicit grouping:
+\begin{lstlisting}
+a = b + c
+    where
+    {b = 1;
+     c = 2}
+d = a * 2
+\end{lstlisting}
+\vfill\null
+\end{multicols}
+
+
+
+\end{multicols}
