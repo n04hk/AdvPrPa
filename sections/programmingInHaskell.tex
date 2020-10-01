@@ -3,7 +3,7 @@
 \begin{multicols}{2}
 \subsection{First Steps}
 \subsubsection{List functions}
-\begin{tabular}{|p{0.5\linewidth}|p{0.5\linewidth}|}
+\begin{tabularx}{\linewidth}{|X|X|}
   \hline
   \textbf{input} & \textbf{output} \\
   \hline
@@ -27,7 +27,7 @@
   \hline
   \lstinline|reverse [1,2,3,4,5]| & \lstinline|[5,4,3,2,1]| \\
   \hline
-\end{tabular}
+\end{tabularx}
 
 \subsubsection{Function Application}
 In mathematics, function application is denoted using parentheses, and multiplication is often denoted using juxtaposition or space:\\
@@ -35,14 +35,14 @@ $f(a,b) + c d$\\
 In Haskell, function application is denoted using space, and multiplication is denoted using $*$:\\
 \lstinline{f a b + c*d}\\
 Moreover, function application is assumed to have higher priority than all other operators:\\
-\begin{tabular}{|p{0.5\linewidth}|p{0.5\linewidth}|}
+\begin{tabularx}{\linewidth}{|X|X|}
     \hline
     \lstinline|f a + b| & \lstinline|(f a) + b|, \textbf{not} \lstinline|f(a + b)|\\
     \hline
-\end{tabular}
+\end{tabularx}
 
 Examples:\\
-\begin{tabular}{|p{0.5\linewidth}|p{0.5\linewidth}|}
+\begin{tabularx}{\linewidth}{|X|X|}
 \hline
 \textbf{Mathematics} & \textbf{Haskell} \\
 \hline
@@ -52,7 +52,7 @@ $f(g(x))$ & \lstinline|f (g x)| \\
 $f(x,g(y))$ & \lstinline|f x (g y)| \\
 $f(x)g(y)$ & \lstinline|f x * g y| \\
 \hline
-\end{tabular}
+\end{tabularx}
 
 \subsubsection{Haskell Scripts}
 \begin{itemize}
@@ -88,7 +88,7 @@ Reading file "test.hs"
 \end{lstlisting}
 
 \subsubsection{Useful GHCi Commands}
-\begin{tabular}{|p{0.5\linewidth}|p{0.5\linewidth}|}
+\begin{tabularx}{\linewidth}{|X|X|}
   \hline
   \textbf{Command} & \textbf{Meaning} \\
   \hline
@@ -101,7 +101,7 @@ Reading file "test.hs"
   \lstinline[language=bash]|:?| & show all commands \\
   \lstinline[language=bash]|:quit| & quit GHCi \\
   \hline
-\end{tabular}
+\end{tabularx}
 
 \subsubsection{Naming Requirements}
 \begin{itemize}
