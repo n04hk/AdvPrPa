@@ -62,8 +62,12 @@ $f(x)g(y)$ & \lstinline|f x * g y| \\
 \end{itemize}
 
 \subsubsection{My First Script}
-\lstinputlisting[multicols=2]{listings/test.hs}
-
+\begin{lstlisting}
+double x = x + x
+quadruple x = double (double x)
+factorial n = product [1..n]
+average ns = sum ns `div` length ns
+\end{lstlisting}
 Note:
 \begin{itemize}
   \item \lstinline{div} is enclosed in back quotes, not forward
@@ -110,7 +114,7 @@ Reading file "test.hs"
   \item By convention, list arguments usually have an s suffix on their name:\\
   \lstinline{xs}, \lstinline{ns}, \lstinline{nss}
 \end{itemize}
-
+%TODO: somewhere around here needs a newpage to be placed to solve problem with multicols
 \subsubsection{The Layout Rule}
 In a sequence of definitions, each definition must begin in precisely the same column:
 \begin{multicols}{3}
@@ -465,6 +469,473 @@ _ && _ = False
 \end{itemize}
 
 \subsubsection{List Patterns}
+Internally, every non-empty list is constructed by repeated use of an operator (:) called ''cons'' that adds an element to the start of the list.
+\begin{lstlisting}
+[1,2,3,4]
+\end{lstlisting}
+Means \lstinline{1:(2:(3:(4:[])))}.
+
+Functions on lists can be defined using \lstinline{x:xa} patterns.
+\begin{lstlisting}
+head :: [a] -> a
+head (x:_) = x
+tail :: [a] -> [a]
+tail (_:xs) = xs
+\end{lstlisting}
+\lstinline{head} and \lstinline{tail} map any non-empty list to its first and remaining elements.
+
+Note:
+\begin{itemize}
+  \item \lstinline{x:xs} patterns only match non-empty lists:
+\begin{lstlisting}
+> head []
+*** Exception: empty list
+\end{lstlisting}
+  \item \lstinline{x:xs} patterns must be parenthesised, because application has priority over \lstinline{(:)}. For example, the following definition gives an error:
+\begin{lstlisting}
+head x:_ = x
+\end{lstlisting}
+\end{itemize}
+
+\subsubsection{Lambda expressions}
+Functions can be constructed without naming the functions by using lampda expressions.
+\begin{lstlisting}
+\x -> x + x
+\end{lstlisting}
+Note:
+\begin{itemize}
+  \item The symbol $\lambda$ is the Greek letter lambda, and is typed at the keyboard as a backslash \textbackslash.
+  \item In mathematics, nameless functions are usually denoted using the $\mapsto$ symbol, as in $x \mapsto x + x$.
+  \item In Haskell, the use of the $\lambda$ symbol for nameless functions comes from the lambda calculus, the theory of functions on which Haskell is based.
+\end{itemize}
+
+\subsubsection{Why are Lambda's useful?}
+Lambda expressions can be used to give a formal meaning to functions defined using currying.
+
+For example:
+\begin{lstlisting}
+add x y = x + y
+\end{lstlisting}
+means
+\begin{lstlisting}
+add = \x -> (\y -> x + y)
+\end{lstlisting}
+
+Lambda expressions can be used to avoid naming functions that are only referenced once.
+
+For example:
+\begin{lstlisting}
+odds n = map f [0..n-1]
+         where
+            f x = x*2 + 1
+\end{lstlisting}
+can be simplified to
+\begin{lstlisting}
+odds n = map (\x -> x*2 + 1) [0..n-1]
+\end{lstlisting}
+
+\subsubsection{Operator Sections}
+An operator written between its two arguments can be converted into a curried function written before its two arguments by using parentheses.
+
+For example:
+\begin{lstlisting}
+> 1 + 2
+3
+> (+) 1 2
+3
+\end{lstlisting}
+
+This convention also allows one of the arguments of the operator to be included in the parentheses.
+
+For example:
+\begin{lstlisting}
+> (1+) 2
+3
+> (+2) 1
+3
+\end{lstlisting}
+
+In general, if $\oplus$ is an operator then functions of the form $(\oplus)$, $(x\oplus)$ and $(\oplus y)$ are called sections.
+
+\subsubsection{Why are Sections useful?}
+Useful functions can sometimes be constructed in a simple way using sections.
+
+For example:
+\begin{itemize}
+  \item[\-] \lstinline{(1+)} - successor function
+  \item[\-] \lstinline{(1/)} - reciprocation function
+  \item[\-] \lstinline{(*2)} - doubling function
+  \item[\-] \lstinline{(/2)} - halving function    
+\end{itemize}
+
+\subsection{List Comprehensions}
+\subsubsection{Set Comprehensions}
+In mathematics, the comprehension notation can be used to construct new sets from old sets.
+
+$\{x^2 | x \in \{1...5\}\}$
+The set $\{1,4,9,16,25\}$ of all numbers $x^2$ such that $x$ is an element of the set $\{1...5\}$.
+
+\subsubsection{Lists Comprehensions}
+In Haskell, a similar comprehension notation can be used to construct new lists from old lists.
+\begin{lstlisting}
+[x^2 | x <- [1..5]]
+\end{lstlisting}
+The list \lstinline{[1,4,9,16,25]} of all numbers \lstinline{x^2} such that \lstinline{x} is an element of the list \lstinline{[1..5]}.
+
+Note:
+\begin{itemize}
+  \item The expression \lstinline{x <- [1..5]} is called a generator, as it states how to generate values for \lstinline{x}.
+  \item Comprehensions can have multiple generators, separated by commas. For example:
+\begin{lstlisting}
+> [(x,y) | x <- [1,2,3], y <- [4,5]]
+[(1,4),(1,5),(2,4),(2,5),(3,4),(3,5)]
+\end{lstlisting}
+  \item Changing the order of the generators changes the order of the elements in the final list:
+\begin{lstlisting}
+> [(x,y) | y <- [4,5], x <- [1,2,3]]
+[(1,4),(2,4),(3,4),(1,5),(2,5),(3,5)]
+\end{lstlisting}
+  \item Multiple generators are like nested loops, with later generators as more deeply nested loops whose variables change value more frequently.
+  \item For example:
+\begin{lstlisting}
+> [(x,y) | y <- [4,5], x <- [1,2,3]]
+[(1,4),(2,4),(3,4),(1,5),(2,5),(3,5)]
+\end{lstlisting}
+\lstinline{x <- [1,2,3]} is the last generator, so the value of the \lstinline{x} component of each pair changes most frequently.
+\end{itemize}
+
+\subsubsection{Dependant Generators}
+Later generators can depend on the variables that are introduced by earlier generators.
+\begin{lstlisting}
+[(x,y) | x <- [1..3], y <- [x..3]]
+\end{lstlisting}
+The list \lstinline{[(1,1),(1,2),(1,3),(2,2),(2,3),(3,3)]} of all pairs of numbers \lstinline{(x,y,)} such that $x$,$y$ are elements of the list \lstinline{[1..3]} and $y \geq x$.
+
+Using a dependant generator we can define the library function that concatenates a list of lists:
+\begin{lstlisting}
+concat :: [[a]] -> [a]
+concat xss = [x | xs <- xss, x <- xs]
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> concat [[1,2,3],[4,5],[6]]
+[1,2,3,4,5,6]
+\end{lstlisting}
+
+\subsubsection{Guards}
+List comprehensions can use guards to restrict the values produced by earlier generators.
+\begin{lstlisting}
+[x | <- [1..10], even x]
+\end{lstlisting}
+The list \lstinline{[2,4,6,8,10]} of all numbers \lstinline{x} such that \lstinline{x} is an element of the list \lstinline{[1..10]} and \lstinline{x} is even.
+
+Using a guard we can define a function that maps a positive integer to its list of factors:
+\begin{lstlisting}
+factors :: Int -> [Int]
+factors n = 
+    [x | y <- [1..n], n `mod` x == 0]
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> factors 15
+[1,3,5,15]
+\end{lstlisting}
+
+A positive integer is prime if its only factors are 1 and itself.
+Hence, using factors we can define a function that decides if a number is prime:
+\begin{lstlisting}
+prime :: Int -> Bool
+prime n = factors n == [1,n]
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> prime 15
+False
+> prime 7
+True
+\end{lstlisting}
+
+Using a guard we can now define a function that returns the list of all primes up to a given limit:
+\begin{lstlisting}
+primes :: Int -> [Int]
+primes n = [x | x <- [2..n], prime x]
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> primes 40
+[2,3,5,7,11,13,17,19,23,29,31,37]
+\end{lstlisting}
+
+\subsubsection{The Zip Function}
+A useful library function is zip, which maps two lists to a list of pairs of their corresponding elements.
+\begin{lstlisting}
+zip :: [a] -> [b] -> [(a,b)]
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> zip ['a','b','c'] [1,2,3,4]
+[('a',1),('b',2),('c',3)]
+\end{lstlisting}
+
+Using zip we can define a function returns that the list of all pairs of adjacent elements from a list:
+\begin{lstlisting}
+pairs :: [a] -> [(a,a)]
+pairs xs = zip xs (tail xs)
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> pairs [1,2,3,4]
+[(1,2),(2,3),(3,4)]
+\end{lstlisting}
+
+Using pairs we can define such a function that decides if the elements in a list are sorted:
+\begin{lstlisting}
+sorted :: Ord a => [a] -> Bool
+sorted xs = and [x <= y | (x,y) <- pairs xs]
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> sorted [1,2,3,4]
+True
+> sorted [1,3,2,4]
+False
+\end{lstlisting}
+
+Using zip we can define a function that returns the list of all positions of a value in a list:
+\begin{lstlisting}
+positions :: Eq a => a -> [a] -> [Int]
+positions x xs = 
+  [i | (x',i) <- zip xs [0..], x == x']
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> positions 0 [1,0,0,1,0,1,1,0]
+[1,2,4,7]
+\end{lstlisting}
+
+\subsubsection{String Comprehensions}
+A string is a sequence of characters enclosed in double quotes.
+Internally, however, strings are represented as lists of characters.
+\begin{lstlisting}
+"abc" :: String
+\end{lstlisting}
+Means \lstinline{['a','b','c'] :: [Char]}.
+
+Because strings are just special kinds of lists, any polymorphic function that operates on lists can also be applied to strings.
+For example:
+\begin{lstlisting}
+> length "abcde"
+5
+> take 3 "abcde"
+"abc"
+> zip "abc" [1,2,3,4]
+[('a',1),('b',2),('c',3)]
+\end{lstlisting}
+
+Similarly, list comprehensions can also be used to define functions on strings, such as counting how many times a character occurs in a string:
+\begin{lstlisting}
+count :: Char -> String -> Int
+count x xs = length [x' | x' <- xs, x == x']
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> count 's' "Mississippi"
+4
+\end{lstlisting}
+
+\subsection{Recursive Functions}
+\subsubsection{Introduction}
+As we have seen, many functions can naturally be defined in terms of other functions.
+\begin{lstlisting}
+fac :: Int -> Int
+fac n = product [1..n]
+\end{lstlisting}
+\lstinline{fac} maps any integer \lstinline{n} to the product of the integers between \lstinline{1} and \lstinline{n}.
+
+Expressions are evaluated by a stepwise process of applying functions to their arguments.
+
+For example:
+\begin{lstlisting}
+fac 4
+=
+product [1..4]
+=
+product [1,2,3,4]
+=
+1*2*3*4
+=
+24
+\end{lstlisting}
+
+\subsubsection{Recursive Functions}
+In Haskell, functions can also be defined in terms of themselves.
+Such functions are called recursive.
+\begin{lstlisting}
+fac 0 = 1
+fac n = n * fac (n-1)
+\end{lstlisting}
+\lstinline{fac} maps \lstinline{0} to \lstinline{1}, and any other integer to the product of itself and the factorial of its predecessor.
+
+For example:
+\begin{lstlisting}
+fac 3
+=
+3 * fac 2
+=
+3 * (2 * fac 1)
+=
+3 * (2 * (1 * fac 0))
+=
+3 * (2 * (1 * 1))
+=
+3 * (2 * 1)
+=
+3 * 2
+=
+6
+\end{lstlisting}
+
+Note:
+\begin{itemize}
+  \item \lstinline{fac 0 = 1} is appropriate because \lstinline{1} is the identity for multiplication: \lstinline{1*x = x = x*1}.
+  \item The recursive definition diverges on integers $< 0$ because the base case is never reached:
+\begin{lstlisting}
+> fac (-1)
+*** Exception: stack overflow
+\end{lstlisting}
+\end{itemize}
+
+\subsubsection{Why is Recursion useful?}
+\begin{itemize}
+  \item Some functions, such as \lstinline{factorial}, are simpler to define in terms of other functions.
+  \item As we shall see, however, many functions can naturally be defined in terms of themselves.
+  \item Properties of functions defined using recursion can be proved using the simple but powerful mathematical technique of induction.
+\end{itemize}
+
+\subsubsection{Recursion on Lists}
+Recursion is not restricted to numbers, but can also be used to define functions on lists.
+\begin{lstlisting}
+product :: Num a => [a] -> a
+product []     = 1
+product (n:ns) = n * product ns
+\end{lstlisting}
+\lstinline{product} maps the empty list to \lstinline{1}, and any non-empty list to its head multiplied by the product of its tail.
+
+For example:
+\begin{lstlisting}
+product [2,3,4]
+=
+2 * product [3,4]
+=
+2 * (3 * product [4])
+=
+2 * (3 * (4 * product []))
+=
+2 * (3 * (4 * 1))
+=
+24
+\end{lstlisting}
+
+Using the same pattern of recursion as in product we can define the \lstinline{length} function on lists.
+\begin{lstlisting}
+length :: [a] -> Int
+length []     = 0
+length (_:xs) = 1 + length xs
+\end{lstlisting}
+\lstinline{length} maps the empty list to \lstinline{0}, and any non-empty list to the successor of the length of its tail.
+
+For example:
+\begin{lstlisting}
+length [1,2,3]
+=
+1 + length [2,3]
+=
+1 + (1 + length [3])
+=
+1 + (1 + (1 + length []))
+=
+1 + (1 + (1 + 0))
+= 3
+\end{lstlisting}
+
+Using a similar pattern of recursion we can define the \lstinline{reverse} function on lists.
+\begin{lstlisting}
+reverse :: [a] -> [a]
+reverse []     = []
+reverse (x:xs) = reverse xs ++ [x]
+\end{lstlisting}
+\lstinline{reverse} maps the empty list to the empty list, and any non-empty list to the reverse of its tail appended to its head.
+
+For example:
+\begin{lstlisting}
+reverse [1,2,3]
+=
+reverse [2,3] ++ [1]
+=
+(reverse [3] ++ [2]) ++ [1]
+=
+((reverse [] ++ [3]) ++ [2]) ++ [1]
+=
+(([] ++ [3]) ++ [2]) ++ [1]
+=
+[3,2,1]
+\end{lstlisting}
+
+\subsubsection{Multiple Arguments}
+Functions with more than one argument can also be defined using recursion.
+For example:
+\begin{itemize}
+  \item Zipping the elements of two lists:
+\begin{lstlisting}
+zip :: [a] -> [b] -> [(a,b)]
+zip []     _      = []
+Zip _      []     = []
+zip (x:xs) (y:ys) = (x,y) : zip xs ys
+\end{lstlisting}
+  \item Remove the first \lstinline{n} elements from a list:
+\begin{lstlisting}
+drop :: Int -> [a] -> [a]
+drop 0 xs     = xs
+drop _ []     = []
+drop n (_:xs) = drop (n-1) xs
+\end{lstlisting}
+  \item Appending two lists:
+\begin{lstlisting}
+(++) :: [a] -> [a] -> [a]
+[]     ++ ys = ys
+(x:xs) ++ ys = x : (xs ++ ys)
+\end{lstlisting}
+\end{itemize}
+
+\subsubsection{Quicksort}
+The quicksort algorithm for sorting a list of values can be specified by the following two rules:
+\begin{itemize}
+  \item The empty list is already sorted;
+  \item Non-empty lists can be sorted by sorting the tail values $\leq$ the head, sorting the tail values $>$ the head, and then appending the resulting lists on either side of the head value.
+\end{itemize}
+
+Using recursion, this specification can be translated directly into an implementation:
+\begin{lstlisting}
+qsort :: Ord a => [a] -> [a]
+qsort []     = []
+qsort (x:xs) =
+  qsort smaller ++ [x] ++ qsort larger
+  where
+    smaller = [a | a <- xs, a <= x]
+    larger  = [b | b <- xs, b > x]
+\end{lstlisting}
+
+For example (abbreviating qsort as q):
+%TODO: insert image
 
 
 \end{multicols}
