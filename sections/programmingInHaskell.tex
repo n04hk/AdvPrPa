@@ -937,7 +937,597 @@ qsort (x:xs) =
 For example (abbreviating qsort as q):
 %TODO: insert image
 
+\subsection{Higher-Order Functions}
+\subsubsection{Introduction}
+A function is called higher-order if it takes a function as an argument or returns a function as a result.
+\begin{lstlisting}
+twice :: (a -> a) -> a -> a
+twice f x = f (f x)
+\end{lstlisting}
+\lstinline{twice} is higher-order because it takes a function as its first argument.
 
+\subsubsection{Why are they useful?}
+\begin{itemize}
+  \item Common programming idioms can be encoded as functions within the language itself.
+  \item Domain specific languages can be defined as collections of higher-order functions.
+  \item Algebraic properties of higher-order functions can be used to reason about programs.
+\end{itemize}
+
+\subsubsection{The \lstinline{map} function}
+The higher-order library function called \lstinline{map} applies a function to every element of a list.
+\begin{lstlisting}
+map :: (a -> b) -> [a] -> [b]
+\end{lstlisting}
+For example:
+\begin{lstlisting}
+> map (+1) [1,3,5,7]
+[2,4,6,8]
+\end{lstlisting}
+
+The \lstinline{map} function can be defined in a particularly simple manner using a list comprehension:
+\begin{lstlisting}
+map f xs = [f x | x <- xs]
+\end{lstlisting}
+
+Alternatively, for the purposes of proofs, the \lstinline{map} function can also be defined using recursion:
+\begin{lstlisting}
+map f []     = []
+map f (x:xs) = f x : map f xs
+\end{lstlisting} 
+
+\subsubsection{The \lstinline{filter} function}
+The higher-order library function \lstinline{filter} selects every element from a list that satisfies a predicate.
+\begin{lstlisting}
+filter :: (a -> Bool) -> [a] -> [a]
+\end{lstlisting}
+For example:
+\begin{lstlisting}
+> filter even [1..10]
+[2,4,6,8,10]
+\end{lstlisting}
+
+Filter can be defined using a list comprehension:
+\begin{lstlisting}
+filter p xs = [x | x <- xs, p x]
+\end{lstlisting}
+
+Alternatively, it can be defined using recursion:
+\begin{lstlisting}
+filter p [] = []
+filter p (x:xs)
+  | p x       = x : filter p xs
+  | otherwise = filter p x
+\end{lstlisting}
+
+\subsubsection{The \lstinline{foldr} function}
+A number of functions on lists can be defined using the following simple pattern of recursion:
+\begin{lstlisting}
+f []     = v
+f (x:xs) = x %*$\oplus$*) f xs
+\end{lstlisting}
+\lstinline{f} maps the empty list to some value \lstinline{v}, and any non-empty list to some function \(\oplus\) applied to its head and \lstinline{f} of its tail.
+
+For example:\\
+(\(v = 0; \oplus = +\))
+\begin{lstlisting}
+sum []     = 0
+sum (x:xs) = x + sum xs
+\end{lstlisting}
+
+(\(v = 1; \oplus = *\))
+\begin{lstlisting}
+product []     = 1
+product (x:xs) = x * product xs
+\end{lstlisting}
+
+(\(v = True; \oplus = \&\&\))
+\begin{lstlisting}
+and []     = True
+and (x:xs) = x && and xs
+\end{lstlisting}
+
+The higher-order library function \lstinline{foldr} (fold right) encapsulates this simple pattern of recursion, with the function \(\oplus\) and the value \lstinline{v} as arguments.
+
+For example:
+\begin{lstlisting}
+sum = foldr (+) 0
+product = foldr (*) 1
+or = foldr (||) False
+and = foldr (&&) True
+\end{lstlisting}
+
+\lstinline{foldr} itself can be defined using recursion:
+\begin{lstlisting}
+foldr :: (a -> b -> b) -> b -> [a] -> b
+foldr f v []     = v
+foldr f v (x:xs) = f x (foldr f v xs)
+\end{lstlisting}
+
+However, it is best to think of \lstinline{foldr} non-recursively, as simultaneously replacing each \lstinline{(:)} in a list by a given function, and [] by a given value.
+
+For example:\\
+\begin{tabularx}{\linewidth}{lX}
+  & \lstinline{sum [1,2,3]}\\
+  \(=\) & \\
+  & \lstinline{foldr (+) 0 [1,2,3]}\\
+  \(=\) & \\
+  & \lstinline{foldr (+) 0 (1:(2:(3:[])))}\\
+  \(=\) & \tiny{(Replace each \lstinline{(:)} by \lstinline{(+)} and \lstinline{[]} by 0)} \\
+  & \lstinline{1+(2+(3+0))}\\
+  \(=\) & \\
+  & \lstinline{6}\\
+\end{tabularx}
+
+For example:\\
+\begin{tabularx}{\linewidth}{lX}
+  & \lstinline{product [1,2,3]}\\
+  \(=\) & \\
+  & \lstinline{foldr (*) 1 [1,2,3]}\\
+  \(=\) & \\
+  & \lstinline{foldr (*) 1 (1:(2:(3:[])))}\\
+  \(=\) & \tiny{(Replace each \lstinline{(:)} by \lstinline{(*)} and \lstinline{[]} by 1)} \\
+  & \lstinline{1*(2*(3*1))}\\
+  \(=\) & \\
+  & \lstinline{6}\\
+\end{tabularx}
+
+\subsubsection{Other \lstinline{foldr} examples}
+Even though \lstinline{foldr} encapsulates a simple pattern of recursion, it can be used to define many more functions than might first be expected.
+
+Recall the length function:
+\begin{lstlisting}
+length :: [a] -> Int
+length []     = 0
+length (_:xs) = 1 + length xs
+\end{lstlisting}
+
+For example:\\
+\begin{tabularx}{\linewidth}{lX}
+  & \lstinline{length [1,2,3]}\\
+  \(=\) & \\
+  & \lstinline{length (1:(2:(3:[])))}\\
+  \(=\) & \tiny{(Replace each \lstinline{(:)} by \(\lambda_n \rightarrow 1 + n\) and \lstinline{[]} by 0)} \\
+  & \lstinline{1+(1+(1+0))}\\
+  \(=\) & \\
+  & \lstinline{3}\\
+\end{tabularx}
+
+Hence, we have:\\
+\lstinline{length = foldr (}\(\lambda_n \rightarrow 1+n\)\lstinline{) 0}
+
+Now recall the \lstinline{reverse} function:
+\begin{lstlisting}
+reverse []     = []
+reverse (x:xs) = reverse xs ++ [x]
+\end{lstlisting}
+
+For example:\\
+\begin{tabularx}{\linewidth}{lX}
+  & \lstinline{reverse [1,2,3]}\\
+  \(=\) & \\
+  & \lstinline{reverse (1:(2:(3:[])))}\\
+  \(=\) & \tiny{(Replace each \lstinline{(:)} by \(\lambda\)\lstinline{x xs}\(\rightarrow\)\lstinline{xs ++ [x]} and \lstinline{[]} by \lstinline{[]})}\\
+  & \lstinline{(([] ++ [3]) ++ [2]) ++ [1]}\\
+  \(=\) & \\
+  & \lstinline{[3,2,1]}\\
+\end{tabularx}
+
+Hence, we have:\\
+\lstinline{reverse = foldr (}\(\lambda\)\lstinline{x xs }\(\rightarrow\)\lstinline{ xs ++ [x]) []}
+
+Finally, we note that the append function \lstinline{(++)} has a particularly compact definition using \lstinline{foldr}:\\
+\lstinline{(++ ys) = foldr (:) ys} {\tiny{(Replace each \lstinline{(:)} by \lstinline{(:)} and \lstinline{[]} by \lstinline{ys}.)}}
+
+\subsubsection{Why is \lstinline{foldr} useful?}
+\begin{itemize}
+  \item Some recursive functions on lists, such as \lstinline{sum}, are simpler to define using \lstinline{foldr}.
+  \item Properties of functions defined using \lstinline{foldr} can be proved using algebraic properties of \lstinline{foldr}, such as fusion and the banana split rule.
+  \item Advanced program optimizations can be simpler if \lstinline{foldr} is used in place of explicit recursion.
+\end{itemize}
+
+\subsubsection{Other library functions}
+The library function \lstinline{(.)} returns the composition of two functions as a single function.
+\begin{lstlisting}
+(.) :: (b -> c) -> (a -> b) -> (a -> c)
+f . g = \x -> f (g x)
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+odd :: Int -> Bool
+odd = not . even
+\end{lstlisting}
+
+The library function \lstinline{all} decides if every element of a list satisfies a given predicate.
+\begin{lstlisting}
+all :: (a -> Bool) -> [a] -> Bool
+all p xs = and [p x | x <- xs]
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> all even [2,4,6,8,10]
+True
+\end{lstlisting}
+
+Dually, the library function \lstinline{any} decides if at least one element of a list satisfies a predicate.
+\begin{lstlisting}
+any :: (a -> Bool) -> [a] -> Bool
+any p xs = or [p x | x <- xs]
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> any (== ' ') "abc def"
+True
+\end{lstlisting}
+
+The library function \lstinline{takeWhile} selects elements from a list while a predicate holds of all the elements.
+\begin{lstlisting}
+takeWhile :: (a -> Bool) -> [a] -> [a]
+takeWhile p [] = []
+takeWhile p (x:xs)
+  | p x       = x : takeWhile p xs
+  | otherwise = []
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> takeWhile (/= ' ') "abc def"
+"abc"
+\end{lstlisting}
+
+Dually, the function \lstinline{dropWhile} removes elements while a predicate holds of all the elements.
+\begin{lstlisting}
+dropWhile :: (a -> Bool) -> [a] -> [a]
+dropWhile p [] = []
+dropWhile p (x:xs)
+  | p x       = dropWhile p xs
+  | otherwise = x:xs
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> dropWhile (== ' ') "    abc"
+"abc"
+\end{lstlisting}
+
+
+\subsection{Declaring Types and Classes}
+\subsubsection{Type declarations}
+In Haskell, a new name for an existing type can be defined using a type declaration.
+\begin{lstlisting}
+type String = [Char]
+\end{lstlisting}
+String is a synonym for the type \lstinline{[Char]}.
+
+Type declarations can be used to make other types easier to read.
+For example, given
+\begin{lstlisting}
+type Pos = (Int, Int)
+\end{lstlisting}
+we can define:
+\begin{lstlisting}
+origin :: Pos
+origin = (0,0)
+left :: Pos -> Pos
+left (x,y) = (x-1,y)
+\end{lstlisting}
+
+Like function definitions, type declarations can also have parameters.
+For example, given
+\begin{lstlisting}
+type Pair a = (a,a)
+\end{lstlisting}
+we can define:
+\begin{lstlisting}
+mult :: Pair Int -> Int
+mult (m,n) = m*n
+copy :: a -> Pair a
+copy x = (x,x)
+\end{lstlisting}
+
+Type declarations can be nested:
+\begin{lstlisting}[frame=single,rulecolor=\color{green}]
+type Pos = (Int, Int)
+type Trans = Pos -> Pos
+\end{lstlisting}
+
+However, they \textbf{cannot} be recursive:
+\begin{lstlisting}[frame=single,rulecolor=\color{red}]
+type Tree = (Int,[Tree])
+\end{lstlisting}
+
+\subsubsection{Data declarations}
+A completely new type can be defined by specifying its values using a data declaration.
+\begin{lstlisting}
+data Bool = False | True
+\end{lstlisting}
+\lstinline{Bool} is a new type, with two new values \lstinline{False} and \lstinline{True}.
+
+Note:
+\begin{itemize}
+  \item The two values \lstinline{False} and \lstinline{True} are called the constructors for the type \lstinline{Bool}.
+  \item Type and constructor names must always begin with an upper-case letter.
+  \item Data declarations are similar to context free grammars. The former specifies the values of a type, the latter the sentences of a language.
+\end{itemize}
+
+Values of new types can be used in the same ways as those of built in types.
+For example, given
+\begin{lstlisting}
+data Answer = Yes | No | Unknown
+\end{lstlisting}
+we can define:
+\begin{lstlisting}
+answers :: [Answer]
+answers = [Yes,No,Unknown]
+flip :: Answer -> Answer
+flip Yes     = No
+flip No      = Yes
+flip Unknown = Unknown
+\end{lstlisting}
+
+The constructors in a data declaration can also have parameters.
+For example, given
+\begin{lstlisting}
+data Shape = Circle Float
+  | Rect Float Float
+\end{lstlisting}
+we can define:
+\begin{lstlisting}
+square :: Float -> Shape
+square n = Rect n n
+area :: Shape -> Float
+area (Circle r) = pi * r^2
+area (Rect x y) = x * y
+\end{lstlisting}
+
+Note:
+\begin{itemize}
+  \item \lstinline{Shape} has values of the form \lstinline{Circle r} where \lstinline{r} is a float, and \lstinline{Rect x y} where \lstinline{x} and \lstinline{y} are floats.
+  \item \lstinline{Circle} and \lstinline{Rect} can be viewed as functions that construct values of type \lstinline{Shape}:
+  \begin{lstlisting}
+  Circle :: Float -> Shape
+  Rect :: Float -> Float -> Shape
+  \end{lstlisting}
+\end{itemize}
+
+Not surprisingly, data declarations themselves can also have parameters.
+For example, given
+\begin{lstlisting}
+data Maybe a = Nothing | Just a
+\end{lstlisting}
+we can define:
+\begin{lstlisting}
+safediv == Int -> Int -> Maybe Int
+safediv _ 0 = Nothing
+safediv m n = Just (m `div` n)
+
+safehead :: [a] -> Maybe a
+safehead [] = Nothing
+safehead xs = Just (head xs)
+\end{lstlisting}
+
+\subsubsection{Recursive types}
+In Haskell, new types can be declared in terms of themselves.
+That is, types can be recursive.
+\begin{lstlisting}
+data Nat = Zero | Succ Nat
+\end{lstlisting}
+\lstinline{Nat} is a new type, with constructors \lstinline{Zero :: Nat} and \lstinline{Succ :: Nat -> Nat}.
+
+Note:
+\begin{itemize}
+  \item A value of type \lstinline{Nat} is either \lstinline{Zero}, or of the form \lstinline{Succ n} where \lstinline{n :: Nat}. That is, \lstinline{Nat} contains the following infinite sequences of values:
+\begin{lstlisting}
+Zero
+Succ Zero
+Succ (Succ Zero)
+%*\(\vdots\)*)
+\end{lstlisting}
+  \item We can think of values of type \lstinline{Nat} as natural numbers, where \lstinline{Zero} represents \lstinline{0}, and \lstinline{Succ} represents the successor function \lstinline{1+}.
+  \item For example, the value
+\begin{lstlisting}
+Succ (Succ (Succ Zero))
+\end{lstlisting}
+  represents the natural number
+\begin{lstlisting}
+1 + (1 + (1 + 0)) = 3
+\end{lstlisting}
+\end{itemize}
+
+Using recursion, it is easy to define functions that convert between values of type \lstinline{Nat} and \lstinline{Int}:
+\begin{lstlisting}
+nat2int :: Nat -> Int
+nat2int Zero     = 0
+nat2int (Succ n) = 1 + nat2int n
+
+int2nat :: Int -> Nat
+int2nat 0 = Zero
+int2nat n = Succ (int2nat (n-1))
+\end{lstlisting}
+
+Two naturals can be added by converting them to integers, adding, and then converting back:
+\begin{lstlisting}
+add :: Nat -> Nat -> Nat
+add m n = int2nat (nat2int m + nat2int n)
+\end{lstlisting}
+
+However, using recursion the function \lstinline{add} can be defined without the need for conversions:
+\begin{lstlisting}
+add Zero     n = n
+add (Succ m) n = Succ (add m n)
+\end{lstlisting}
+
+For example:
+\begin{tabularx}{\linewidth}{lX}
+  & \lstinline{add (Succ (Succ Zero)) (Succ Zero)}\\
+  \(=\) & \\
+  & \lstinline{Succ (add (Succ Zero)) (Succ Zero)}\\
+  \(=\) & \\
+  & \lstinline{Succ (Succ (add Zero (Succ Zero)))}\\
+  \(=\) & \\
+  & \lstinline{Succ (Succ (Succ Zero))}\\
+\end{tabularx}
+
+Note:
+\begin{itemize}
+  \item The recursive definition for \lstinline{add} corresponds to the laws \lstinline{0+n=n} and \lstinline{(1+m)+n = 1+(m+n)}.
+\end{itemize}
+
+\subsubsection{Arithmetic expressions}
+Consider a simple form of expressions built up from integers using addition and multiplication.
+%TODO: insert image
+
+Using recursion, a suitable new type to represent such expressions can be declared by:
+\begin{lstlisting}
+data Expr = Val Int
+          | Add Expr Expr
+          | Mul Expr Expr
+\end{lstlisting}
+
+For example, the expression on the previous slide would be represented as follows:
+\begin{lstlisting}
+Add (Val 1) (Mul (Val 2) (Val 3))
+\end{lstlisting}
+
+Using recursion, it is now easy to define functions that process expressions.
+For example:
+\begin{lstlisting}
+size :: Expr -> Int
+size (Val n)   = 1
+size (Add x y) = size x + size y
+size (Mul x y) = size x + size y
+
+eval :: Expr -> Int
+eval (Val n)   = n
+eval (Add x y) = eval x + eval y
+eval (Mul x y) = eval x * eval y
+\end{lstlisting}
+
+Note:
+\begin{itemize}
+  \item The three constructors have types:
+\begin{lstlisting}
+Val :: Int -> Expr
+Add :: Expr -> Expr -> Expr
+Mul :: Expr -> Expr -> Expr
+\end{lstlisting}
+  \item Many functions on expressions can be defined by replacing the constructors by other functions using a suitable \lstinline{fold} function. For example:
+\begin{lstlisting}
+eval folde id (+) (*)
+\end{lstlisting}
+\end{itemize}
+
+
+\subsection{The Countdown Problem}
+\subsubsection{What is Countdown?}
+\begin{itemize}
+  \item A popular quiz programme on British television that has been running since 1982.
+  \item Includes a numbers game that we shall refer to as the countdown problem.
+\end{itemize}
+
+\subsubsection{Example}
+Using the numbers
+\begin{lstlisting}
+1 3 7 10 25 50
+\end{lstlisting}
+and the arithmetic operators
+\begin{lstlisting}
++ - * /
+\end{lstlisting}
+construct an expression whose value is \lstinline{765}.
+
+\subsubsection{Rules}
+\begin{itemize}
+  \item All the numbers, including intermediate results, must be positive naturals \((1,2,3,\ldots)\).
+  \item Each of the source numbers can be used at most once when constructing the expression.
+  \item We abstract from other rules that are adopted on television for pragmatic reasons.
+\end{itemize}
+
+For our example, one possible solution is
+\begin{lstlisting}
+(25 - 10) * (50+1) = 765
+\end{lstlisting}
+
+Notes:
+\begin{itemize}
+  \item There are \(780\) solutions for this example.
+  \item Changing the target number to \lstinline{831} gives an example that has no solutions.
+\end{itemize}
+
+\subsubsection{Evaluating Expressions}
+Operators:
+\begin{lstlisting}
+data Op = Add | Sub | Mul | Div
+\end{lstlisting}
+Apply an operator:
+\begin{lstlisting}
+apply :: Op -> Int -> Int -> Int
+apply Add x y = x + y
+apply Sub x y = x - y
+apply Mul x y = x * y
+apply Div x y = x `div` y
+\end{lstlisting}
+
+Decide if the result of applying an operator to two positive natural numbers is another such:
+\begin{lstlisting}
+valid :: Op -> Int -> Int -> Bool
+valid Add _ _ = True
+valid Sub x y = x > y
+valid Mul _ _ = True
+valid Div x y = x `mod` y == 0
+\end{lstlisting}
+
+Expression:
+\begin{lstlisting}
+data Expr = Val Int | App Op Expr Expr
+\end{lstlisting}
+
+Return the overall value of an expression, provided that it is a positive natural number:
+\begin{lstlisting}
+eval :: Expr -> [Int]
+eval (Val n)
+eval ( App o l r) = [apply o x y | x <- eval l
+                                 , y <- eval r
+                                 , valid o x y]
+\end{lstlisting}
+Either succeeds and returns a singleton list, or fails and returns the empty list.
+
+\subsubsection{Formalizing the problem}
+Return a list of all possible ways of choosing zero or more elements from a list:
+\begin{lstlisting}
+choices :: [a] -> [[a]]
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> choices [1,2]
+[[],[1],[2],[1,2],[2,1]]
+\end{lstlisting}
+
+Return a list of all the values in an expression:
+\begin{lstlisting}
+values :: Expr -> [Int]
+values (Val n)     = [n]
+values (App _ l r) = values l ++ values r
+\end{lstlisting}
+
+Decide if an expression is a solution for a given list of source numbers and a target number:
+\begin{lstlisting}
+solution :: Expr -> [Int] -> Int -> Bool
+solution e ns n = elem (values e) (choices ns)
+                  && eval e == [n]
+\end{lstlisting}
+
+\subsubsection{Brute force solution}
+
+
+
+
+
+
+\newpage
 \subsection{Exercises:}
 
 \subsubsection{Exercise 1}
