@@ -1,0 +1,114 @@
+Given the declarations, give the most general type of each value, and if the value is not a function, then evaluate it.\\
+\textbf{Lambda expressions}\\
+\begin{tabularx}{\linewidth}{|X|X|}
+  \hline
+  \lstinline|f01 :: Num a => a -> a| & \\
+  \hline
+  \lstinline|f01 = \\x -> 2*x| & \lstinline|Num a => a -> a|\\
+  \hline
+  \lstinline|f01' = \\x -> 2*x| & \lstinline|Num a => a -> a|\\
+  \hline
+  \lstinline|f01'' () = \\x -> 2*x| & \lstinline|Num a => () -> a -> a|\\
+  \hline
+  \lstinline|f01''' _ = \\x -> 2*x| & \lstinline|Num a => p -> a -> a|\\
+  \hline
+  \lstinline|f02 = \\x -> \\y -> x + y| & \lstinline|Num a => a -> a -> a|\\
+  \hline
+  \lstinline|f03 = \\x y -> x + y| & \lstinline|Num a => a -> a -> a|\\
+  \hline
+  \lstinline|f04 x = \\y -> x + y| & \lstinline|Num a => a -> a -> a|\\
+  \hline
+  \lstinline|f05 = \\(x,y) -> x + y| & \lstinline|Num a => (a,a) -> a|\\
+  \hline
+  \lstinline|f06 = \\[x,y] -> x + y| & \lstinline|Num a => [a] -> a|\\
+  \hline
+  \lstinline|f07 = [\\x -> x+1, \\x -> 2*x, \\x -> x^2]| & \lstinline|Num a => [a -> a]|\\
+  \hline
+  \lstinline|f08 = head f07 5| & \lstinline|Num a => a|\\
+  \hline
+  \lstinline|f09 = \\x -> x| & \lstinline|p -> p|\\
+  \hline
+  \lstinline|f10 = [f09, \\x -> x+1]| & \lstinline|Num a => [a -> a]|\\
+  \hline
+  \lstinline|f11 = \\_ -> (\\x -> x+1, \\() -> 'a')| & \lstinline|Num a => p -> (a -> a, () -> Char)|\\
+  \hline
+\end{tabularx}
+
+\textbf{Sections}\\
+\begin{tabularx}{\linewidth}{|X|X|}
+  \hline
+  \lstinline|x ^+^ y = x^2 + y^2| & \\
+  \hline
+  \lstinline|g01 = (^+^)| & \lstinline|Num a => a -> a -> a|\\
+  \hline
+  \lstinline|g02 = (^+^ 2)| & \lstinline|Num a => a -> a|\\
+  \hline
+  \lstinline|g03 = (3 ^+^)| & \lstinline|Num a => a -> a|\\
+  \hline
+  \lstinline|g04 = (3 ^+^ 2)| & \lstinline|Num a => a|\\
+   & 13\\
+  \hline
+  \lstinline|g05 x y = 2*x + 3*y| & \lstinline|Num a => a -> a -> a| \\
+  \hline
+  \lstinline|g06 = (`g05` 2)| & \lstinline|Num a => a -> a|\\
+  \hline
+  \lstinline|g07 = (2 `g05`)| & \lstinline|Num a => a -> a|\\
+  \hline
+  \lstinline|g08 = g06 3| & \lstinline|Num a => a|\\
+   & \lstinline|12|\\
+  \hline
+  \lstinline|g09 = g07 4| & \lstinline|Num a => a|\\
+   & \lstinline|16|\\
+  \hline
+  \lstinline|g10 x y z = 2*x + 3*y + 4*z| & \lstinline|Num a => a -> a -> a -> a|\\
+  \hline
+  \lstinline|g11 = (`g05` 2)| & \lstinline|Num a => a -> a|\\
+  \hline
+  \lstinline|g12 = g06 3| & \lstinline|Num a => a|\\
+   & \lstinline|12|\\
+  \hline
+  \lstinline|g13 = g07 4| & \lstinline|Num a => a|\\
+   & \lstinline|16|\\
+  \hline
+  \lstinline|g14 x = (g10 (x+1))| & \lstinline|Num a => a -> a -> a -> a|\\
+  \hline
+  \lstinline|g15 = g14 2 3 4| & \lstinline|Num a => a|\\
+   & \lstinline|31|\\
+  \hline
+  \lstinline|g16 n = \x -> ([(+), (-), (*)] !! n) x 2| & \lstinline|Num a => a -> a -> a|\\
+  \hline
+  \lstinline|g17 = g16 1 5| & \lstinline|Num a => a|\\
+   & \lstinline|3|\\
+  \hline
+\end{tabularx}
+
+\textbf{List comprehensions}\\
+\begin{tabularx}{\linewidth}{|X|X|}
+  \hline
+  \lstinline|h01 = [x \| x <- [1 .. 5]]| & \lstinline|(Num a, Enum a) => [a]|\\
+   & \lstinline|[1,2,3,4,5]|\\
+  \hline
+  \lstinline|h02 = [2*x \| x <- [1 .. 5]]| & \lstinline|(Num a, Enum a) => [a]|\\
+  & \lstinline|[2,4,6,8,10]|\\
+  \hline
+  \lstinline|h03 = [x - y \| x <- [1 .. 3], y <- [1 .. 4]]| & \lstinline|(Num a, Enum a) => [a]|\\
+   & \lstinline|[0,-1,-2,-3,1,0,-1,-2,|\\ %manual linebreak
+   & \lstinline|2,1,0,-1]|\\
+  \hline
+  \lstinline|h04 = [x - y \| y <- [1 .. 3], x <- [1 .. 4]]| & \lstinline|(Num a, Enum a) => [a]|\\
+   & \lstinline|[0,1,2,3,-1,0,1,2,-2,-1,|\\
+   & \lstinline|0,1]|\\
+  \hline
+  \lstinline|h05 = [x + y \| x <- [1 .. 3], y <- [1 .. 4], x >= y]| & \lstinline|(Num a, Enum a, Ord a) => [a]|\\
+   & \lstinline|[2,3,4,4,5,6]|\\
+  \hline
+  \lstinline|h06 = [head x \| x <- ["dimdi", "schnurpsel", "zumsel"]]| & \lstinline|[Char]|\\
+   & \lstinline|"dsz"|\\
+  \hline
+  \lstinline|h07 = [x \| (x : _) <- ["dimdi", "schnurpsel", "zumsel"]]| & \lstinline|[Char]|\\
+   & \lstinline|"dsz"|\\
+  \hline
+  \lstinline|h08 = [xs \| ('s' : xs) <- ["dimdi", "schnurpsel", "zumsel"]]| & \lstinline|[[Char]]|\\
+   & \lstinline|["chnurpsel"]|\\
+  \hline
+\end{tabularx}

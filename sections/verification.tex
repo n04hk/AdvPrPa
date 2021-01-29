@@ -1,0 +1,713 @@
+%!TEX root = ../AdvPrPa.tex
+\section{Verification}
+\begin{multicols}{2}
+\subsection{Correctness of Software}
+\subsubsection{Software Development Process}
+Problem $\rightarrow$ Requirements $\rightarrow$ Specification $\rightarrow$ Implementation\\
+
+Correctness issues:
+\begin{itemize}
+  \item Do the requirements describe the problem in an adequate way?
+  \item Is the specification an adequate formalization of the requirements? $\rightarrow$ Validation
+  \item Is the implementation correct w.r.t. the specification? $\rightarrow$ Verification
+\end{itemize}
+
+\subsubsection{Proving and Testing}
+\begin{itemize}
+  \item Testing: good for finding bugs
+  \item Proving: good for showing there are no bugs
+  \item A good practical method:
+  \begin{itemize}
+    \item First: test your program to find as many possible errors as possible
+    \item Then: try to prove your program correct
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Proving: The Very Idea}
+What do we need for such proofs?
+\begin{itemize}
+  \item a completely formal specification language;
+  \item an implementation language suited for this task;
+  \item a mathematical theory that links specification and implementation language;
+  \item tool support.
+\end{itemize}
+
+The most fundamental of all these approaches is the verification of imperative programs against specifications consisting of logical formulas using \textbf{Hoare} logic.
+
+\subsubsection{Dafny}
+Dafny is a specification and implementation language for proving the correctness of an implementation against a specification.
+
+\subsection{Specifications vs. Implementations}
+
+\subsubsection{Implementation}
+The following Java method computes a partial function from int to int.
+(''greatest integer less or equal to square root of a'')
+\begin{lstlisting}[language=Java]
+int f(int a) {
+  int t, s, i;
+  t = 1; s = 1; i = 0;
+  while (s <= a){
+    t = t + 2;
+    s = s + t;
+    i = i + 1;
+  }
+  return i;
+}
+\end{lstlisting}
+
+\subsubsection{Specification}
+The following Dafny specification defines a partial function from int to int. 
+% TODO: specify listing as Dafny
+\begin{lstlisting}
+method F(a:int) returns (r:int)
+  requires a >= 0
+  ensures r*r <= a < (r+1)*(r+1)
+\end{lstlisting}
+
+\begin{itemize}
+  \item The \lstinline{requires} clause declares a \textbf{precondition}. This is a condition we assume to hold before execution begins.% TODO: specify listing as dafny
+  \item The \lstinline{ensures} clause declares a \textbf{postcondition}. This is a condition that is guaranteed to hold after execution ends, provided that the precondition holds before execution begins.
+\end{itemize}
+
+\subsubsection{Key Difference}
+\begin{itemize}
+  \item The specification describes \textbf{what} the result of the function is \textbf{without} explaining how to compute it.
+  \item The implementation describes \textbf{how} to compute the result of the function \textbf{without} explaining what it is.
+\end{itemize}
+
+\subsubsection{Both in one, the spec informally (Java)}
+\begin{lstlisting}[language=Java]
+// Integer square root of an integer.
+int iroot(int a)
+  // Provided a >= 0, iroot(a) returns
+  // the greatest integer r with r*r <=a
+{
+  int odd, square, root;
+  odd=1; square=1; root=0;
+  while (square <= a) {
+    odd=odd+2;
+    square=square+odd;
+    root=root+1;
+  }
+  return root;
+}
+\end{lstlisting}
+
+\subsubsection{Both in one, the spec formally (Dafny)}
+\begin{lstlisting}
+method NatSquareRoot(a:int)  returns (r:int)
+  requires a >= 0
+  ensures r*r <= a < (r+1)*(r+1)
+{
+  var d, s:int;
+  d := 1; // Odd
+  s := 1; // Square
+  r := 0; // Root
+  while s <= a
+    invariant d == 2*r + 1
+    invariant s == (r+1)*(r+1)
+    invariant r*r <= a
+  {
+    d := d + 2;
+    s := s + d;
+    r := r + 1;
+  }
+}
+\end{lstlisting}
+
+\subsubsection{Increased Readability through Redundancy}
+Since very special knowledge is needed for developing an efficient implementation from a specification, it is not reasonable to assume that it will be possible to construct a compiler that directly compiles a specification into efficiently executable code.
+\begin{itemize}
+  \item Now we have two descriptions of the same problem $\rightarrow$ \textbf{Redundancy}
+  \item The two descriptions provide very distinct points of view.
+\end{itemize}
+
+\subsection{IML: Imperative (Model $|$ Mini) Language}
+
+\subsubsection{Top Level}
+\begin{tabularx}{\linewidth}{Xl}
+  $\langle \text{program} \rangle$ & $::= \langle \text{specification} \rangle \langle \text{implementation} \rangle $\\
+  $\langle \text{specification} \rangle$ & $::= \text{'specification'} \langle \text{precondition} \rangle$\\
+   & $\quad \langle \text{framecondition} \rangle \langle \text{postcondition} \rangle$\\
+  $\langle \text{precondition} \rangle$ & $::= \text{'requires'} \langle \text{assert} \rangle$\\
+  $\langle \text{framecondition} \rangle$ & $::= \text{'modifies'} \langle \text{progvar} \rangle \left(\text{','} \langle \text{progvar} \rangle \right)^*$\\
+  $\langle \text{postcondition} \rangle$ & $::= \text{'ensures'} \langle \text{assert} \rangle$\\
+  $\langle \text{implementation} \rangle$ & $::= \text{'implementation'} \langle \text{cmd} \rangle$\\
+\end{tabularx}
+
+A program variable $\langle \text{progvar} \rangle$ is a sequence of letters and digits not starting with a digit.
+
+\subsubsection{Commands}
+\begin{tabularx}{\linewidth}{Xl}
+  $\langle \text{cmd} \rangle$ & $::= \langle \text{skip} \rangle$\\
+   & $\quad | \langle \text{assignment} \rangle$\\
+   & $\quad | \langle \text{composition} \rangle$\\
+   & $\quad | \langle \text{conditional} \rangle$\\
+   & $\quad | \langle \text{loop} \rangle$\\
+  $\langle \text{skip} \rangle$ & $::= \text{'skip'}$\\
+  $\langle \text{assignment} \rangle$ & $::= \langle \text{progvar} \rangle \text{':='} \langle \text{aexpr} \rangle$\\
+  $\langle \text{composition} \rangle$ & $::= \langle \text{cmd} \rangle \text{';'} \langle \text{cmd} \rangle$\\
+  $\langle \text{conditional} \rangle$ & $::= \text{'if'} \langle \text{bexpr} \rangle \text{'then'} \langle \text{cmd} \rangle \text{'else'} \langle \text{cmd} \rangle \text{'end'}$\\
+  $\langle \text{loop} \rangle$ & $::= \text{'while'} \langle \text{bexpr} \rangle \text{'invar'} \langle \text{assert} \rangle \text{'do'} \langle \text{cmd} \rangle \text{'end'}$\\
+\end{tabularx}
+
+\subsubsection{Terms and Arithmetic Expressions}
+\begin{tabularx}{\linewidth}{Xl}
+  $\langle \text{term} \rangle$ & $::= \langle \text{aliteral} \rangle$\\
+   & $\quad | \langle \text{progvar} \rangle$\\
+   & $\quad | \langle \text{oldvar} \rangle$\\
+   & $\quad | \langle \text{boundvar} \rangle$\\
+   & $\quad | \text{'-'} \langle \text{term} \rangle$\\
+   & $\quad | \langle \text{term} \rangle \langle \text{aopr} \rangle \langle \text{term} \rangle$\\
+   & $\quad | \text{'('} \langle \text{term} \rangle \text{')'}$\\
+   & $\quad | \langle \text{funid} \rangle \text{'('} \langle \text{term} \rangle \left( \text{','} \langle \text{term} \rangle \right)^* \text{')'}$\\
+  $\langle \text{aopr} \rangle$ & $::= \text{'}+\text{'} | \text{'}-\text{'} | \text{'}*\text{'}$\\
+\end{tabularx}
+An arithmetic expression is the same as a term, except that $\langle \text{oldvar} \rangle$ and $\langle \text{boundvar} \rangle$ must not occur in it, and only implemented functions may be used.
+\begin{itemize}
+  \item $\langle \text{aliteral} \rangle$ is a sequence of digits.
+  \item $\langle \text{oldvar} \rangle$ is a sequence of letters and digits not starting with a digit, ending with a tilde.
+  \item $\langle \text{boundvar} \rangle$ is a sequence of letters and digits not starting with a digit, ending with a prime.
+  \item $\langle \text{funid} \rangle$ is a sequence of letters and digits not starting with a digit.
+\end{itemize}
+
+\subsubsection{Assertions and Boolean Expressions}
+\begin{tabularx}{\linewidth}{Xl}
+  $\langle \text{assert} \rangle$ & $::= \langle \text{bliteral} \rangle$\\
+   & $\quad | \langle \text{term} \rangle \langle \text{ropr} \rangle \langle \text{term} \rangle$\\
+   & $\quad | \text{'not'} \langle \text{assert} \rangle$\\
+   & $\quad | \langle \text{assert} \rangle \langle \text{bopr} \rangle \langle \text{assert} \rangle$\\
+   & $\quad | \text{'('} \langle \text{assert} \rangle \text{')'}$\\
+   & $\quad | \text{'('} \text{'forall'} \langle \text{boundvar} \rangle \text{'} | \text{'} \langle \text{assert} \rangle \text{')'}$\\
+   & $\quad | \text{'('} \text{'exists'} \langle \text{boundvar} \rangle \text{'} | \text{'} \langle \text{assert} \rangle \text{')'}$\\
+  $\langle \text{bliteral} \rangle$ & $::= \text{'true'} | \text{'false'}$\\
+  $\langle \text{ropr} \rangle$ & $::= \text{'}=\text{'} | \text{'}/=\text{'} | \text{'}<\text{'} | \text{'}\leq\text{'} | \text{'}>\text{'} | \text{'}\geq\text{'}$\\
+  $\langle \text{bopr} \rangle$ & $::= \text{'}\&\&\text{'} | \text{'}||\text{'} | \text{'}==>\text{'} | \text{'}<==>\text{'}$\\
+\end{tabularx}
+A boolean expression is the same as an assertion, except that terms are restricted to arithmetic expressions, and quantifications must not occur in it.
+
+
+\subsubsection{Terms, Assertions and Expressions}
+\begin{itemize}
+  \item Terms and arithmetic expressions are evaluated in a state to yield a value of type integer.
+  \item Assertions and boolean expressions are evaluated in a state to yield a value of type boolean.
+  \item Expressions have no side effects: their evaluation never changes state. (Think of them as being functional!) This property considerably simplifies verification.
+  \item All terms, assertions, and expressions are total: they are defined in all possible states. (This is the reason why we have excluded division!)
+\end{itemize}
+
+Why so complicated?
+\begin{itemize}
+  \item Why do we distinguish between terms and arithmetic expressions?
+  \item Why do we distinguish between assertions and boolean expressions?
+  \item The (arithmetic and boolean) expressions occur in the implementation context.
+  \begin{itemize}
+    \item So they must be executable.
+  \end{itemize}
+  \item The terms and assertions occur in the specification context.
+  \begin{itemize}
+    \item There is no need for them to be executable.
+  \end{itemize}
+  \item Recall: Verification is done at compiletime, not at runtime. The compiler will not generate any code for specification constructs!
+\end{itemize}
+
+\subsubsection{Old-Variables}
+\begin{itemize}
+  \item We need a possibility in the postcondition to refer to the initial values of variables.
+  \item Old-variables must not occur in preconditions - there they would make no sense.
+  \item In order to record the initial values of variables, the verifier adds a corresponding assignment command for each old-variable to the very beginning of the command.
+  \begin{itemize}
+    \item Note: This is done by the verifier; the compiler does not generate any code for such variables and thus for such assignment commands.
+    \item So there is no runtime overhead.
+    \item And there is not possibility to refer to old-variables in the implementation context.
+    \item In particular: Old-variables must not occur on the left-hand side of assignment commands.
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Frameconditions}
+\begin{itemize}
+  \item A framecondition lists all program variables mentioned in precondition and postcondition whose values are allowed to be changed during execution.
+  \item But the important point is this: The values of all other variables mentioned in precondition and postcondition must remain fixed.
+  \item Variables local to the implementation are not considered here.
+  \item Now the specification of our division program reads as follows:
+\begin{lstlisting}
+requires a>=0 && b>0
+modifies q, r
+ensures a=b*q+r && 0<=r && r<b
+\end{lstlisting}
+  \item The verifier must perform a corresponding check: Each program variable occurring on the left-hand side of some assignment command and being mentioned in precondition or postcondition must be mentioned in the framecondition.
+  \begin{itemize}
+    \item This is a simple syntactic check.
+  \end{itemize}
+\end{itemize}
+
+\subsection{States}
+\subsubsection{States and Assignment Commands}
+\begin{itemize}
+  \item The distinguishing feature of any imperative programming language is the explicit change of state by means of assignment commands.
+  \item Execution of a program generates a sequence of states.
+  \item A single state can be modelled by a function mapping the variables $VAR$ of a program to their current values $VAL$:
+  $STATE = VAR \rightarrow VAL$
+\end{itemize}
+
+\subsubsection{States and Boolean Expressions}
+A boolean expression can be evaluated in a given state to yield a truth value.
+
+\subsubsection{States and Assertions}
+An assertion describes a set of states, namely the set of all states that satisfy the assertion, i.e., in which the assertion evaluates to \textit{true}.
+
+\subsection{Recall Logic}
+\subsubsection{Implication}
+\begin{itemize}
+  \item The notion of logical implication
+  \begin{itemize}
+    \item 'if $p$ then $q$', or
+    \item '$p$ implies $q$', or
+    \item '$q$ follows from $p$'
+  \end{itemize}
+  is absolutely central for verification.
+  \item It is formally written as $p \Rightarrow q$ (sometimes also as $q \Leftarrow p$.
+  \item $p$ is called the antecedent, and $q$ the consequent of the implication.
+  \item This is obviously true for all possible values of $n$.
+  \begin{itemize}
+    \item Let $n=6$. Thus $\underbrace{6>5}_\text{true} \Rightarrow \underbrace{6>3}_\text{true}$ is true.
+    \item Let $n=4$. Thus $\underbrace{4>5}_\text{false} \Rightarrow \underbrace{4>3}_\text{true}$ is true.
+    \item Let $n=2$. Thus $\underbrace{2>5}_\text{false} \Rightarrow \underbrace{2>3}_\text{false}$ is true.
+  \end{itemize}
+  \item We observe that the implication is true if the antecedent is false, irrespective of the consequent.
+  \item If the antecedent is false, the implication as a whole simply tells us nothing about the consequent - in particular nothing false.
+  \item Therefore, if the antecedent is false, we say that the implication is vacuously true.
+  \item With the antecedent we restrict our attention to the interesting cases.
+  \item The only case in which an implication is false is if the antecedent is true, but the consequent is false.
+  \item Of the following four statements (Of course, everybody knows that the moon is made of cheese...)
+  \begin{itemize}
+    \item If the moon is made of chocolate, then 5 is a prime number.
+    \item If the moon is made of chocolate, then 5 is not a prime number.
+    \item If the moon is made of cheese, then 5 is a prime number.
+    \item If the moon is made of cheese, then 5 is not a prime number.
+  \end{itemize}
+  only the last one is false.
+  \item The example also tells us that there need not be any causal relationship between antecedent and consequent.
+  \item Implication can be expressed by disjunction and negation: $p \Rightarrow q \equiv \neg p \lor q$.
+  \item Example:
+  \begin{itemize}
+    \item Let us read $\neg p$ as 'Hands up' and $q$ as 'I shoot'. Then we see: 'Hands up or I shoot' is equivalent to 'If you don't take up your hands, then I shoot'.
+  \end{itemize}
+  \item Consider the implications
+  \begin{itemize}
+    \item $x=5 \land y=7 \Rightarrow x=5$
+    \item $x=5 \Rightarrow x=5 \lor y=7$
+  \end{itemize}
+  \item Both are obviously true for all possible values of $x$ and $y$.
+  \item We see that the antecedent is more restrictive than the consequent.
+  \item The set of states given by the antecedent is a subset of the set of states given by the consequent.
+  \item We say that the antecedent is stronger than the consequent, or that the consequent is weaker than the antecedent.
+  \item What is the strongest, what the weakest possible condition?
+  \begin{itemize}
+    \item Think of a doorkeeper.
+    \item The strongest possible doorkeeper is a closed door (without doorkeeper).
+    \item The weakest possible doorkeeper is an open door (without doorkeeper).
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Validity versus Truth}
+\begin{itemize}
+  \item An assertion $p$ is called valid if it is true in all states.
+  \item In this case we write: $\models p$.
+  \item Otherwise, i.e., in case there exists a state in which the assertion is not true, we say the assertion is not valid and write: $\nvDash p$
+  \item Examples:
+  \begin{itemize}
+    \item $\models n > 5 \Rightarrow n > 3$
+    \item $\nvDash n > 3 \Rightarrow n > 5$
+  \end{itemize}
+\end{itemize}
+
+\subsection{Hoare Triples}
+\subsubsection{Syntax}
+\begin{itemize}
+  \item Essential for verification is the concept of a Hoare Triple.
+  \item $\langle \text{Hoare\_triple} \rangle ::= \text{'}\{\text{'} \langle \text{assert} \rangle \text{'}\}\text{'} \langle \text{cmd} \rangle \text{'}\{\text{'} \langle \text{assert} \rangle \text{'}\}\text{'}$
+  \item The first assertion is called the precondition of the Hoare triple.
+  \item The second assertion is called the postcondition.
+  \item Examples:
+  \begin{itemize}
+    \item $\{ x = 5 \} x := x + 1 \{ x = 17 \}$
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Semantics}
+\begin{itemize}
+  \item A Hoare triple is itself a boolean formula, depending on some state.
+  \item But: We must consider two states in a Hoare triple:
+  \begin{itemize}
+    \item the state before execution of the command, called the prestate, and
+    \item the state after ececution of the command, called the poststate.
+  \end{itemize}
+  \item Let us consider the occurrences of variable $x$ in the following Hoare triple: $\{ x > 5 \} x := x + 1 \{ x > 6 \}$
+  \begin{itemize}
+    \item the first and the third occurrence denote the value of $x$ in the prestate;
+    \item the second occurrence denotes the address of variable $x$; and
+    \item the fourth occurrence denotes the value of $x$ in the poststate.
+  \end{itemize}
+  \item We see that variable $x$ occurs with three different meanings in a single formula - a quite unusual situation in mathematics.
+  \item Now we are ready to define the semantics.
+  \item A Hoare triple: $\{ P \} C \{ Q \}$ is true in a given prestate, if the following implication is true:
+  \begin{itemize}
+    \item If the prestate satisfies precondition $P$ and execution of the command $C$ terminates, then the poststate satisfies the postcondition $Q$.
+  \end{itemize}
+  Or more formally:
+  \begin{itemize}
+    \item prestate satisifes $P \land$ execution of $C$ terminates $\Rightarrow$ poststate satisfies $Q$
+  \end{itemize}
+  \item Example:
+  \begin{itemize}
+    \item $\{ x > 0 \} x := x + 1 \{ x > 2 \}$
+    \item [\-] in prestate $\sigma_0$ with $\sigma_0(x) = 0$ this yields true
+    \item [\-] in prestate $\sigma_1$ with $\sigma_1(x) = 1$ this yields false
+    \item [\-] in prestate $\sigma_2$ with $\sigma_2(x) = 2$ this yields true
+  \end{itemize}
+\end{itemize}
+
+\subsubsection{Validity}
+\begin{itemize}
+  \item A Hoare triple $\{P\}C\{Q\}$ is called valid if it is true in all prestates.
+  \item In this case we write: $\models\{P\}C\{Q\}$
+  \item In other words, it is valid if the following implication holds:
+  \begin{itemize}
+    \item If execution of command $C$ begins in any state that satisfies the precondition $P$ and execution terminates, then the resulting state satisfies the postcondition $Q$.
+  \end{itemize}
+  \item In this case, the command $C$ is called partially correct with respect to precondition $P$ and postcondition $Q$.
+  \item Note that a valid Hoare triple does not provide any information concerning the resulting state if execution begins in any state that does not satisfy the precondition.
+  \item Examples:
+  \item [\-] $\nvDash \{x=5\} x := x + 1 \{x=17\}$
+  \item [\-] $\models \{x>5\} x := x + 1 \{x>6\}$
+  \item [\-] $\nvDash \{j=0\} \text{ while } i = 0 \text{ do skip end } \{k=0\}$
+\end{itemize}
+
+\subsubsection{Total Correctness}
+\begin{itemize}
+  \item Consider a Hoare triple be valid and execution of command $C$ terminates in all prestates satisfying the precondition $P$.
+  \item In other words, the following implication holds:
+  \begin{itemize}
+    \item If execution of command $C$ begins in any state that satisfies the precondition $P$, then execution terminates and the resulting state satisfies the postcondition $Q$.
+  \end{itemize}
+  \item In this case, the command $C$ is called totally correct with respect to precondition $P$ and postcondition $Q$.
+  \item It is often practically first to prove partial correctness and after this termination.
+  \item Both together yield total correctness.
+\end{itemize}
+
+\subsubsection{Partial versus Total Correctness}
+\begin{itemize}
+  \item Partial correctness means:
+  \begin{itemize}
+    \item If the program ever terminates, then the result it produces is correct.
+    \item Or: the program cannot give a wrong answer - but we don't know whether it gives an answer at all.
+  \end{itemize}
+  \item Total correctness means:
+  \begin{itemize}
+    \item The program terminates and the result it produces is correct.
+  \end{itemize}
+  \item Example:
+  \begin{itemize}
+    \item You are in a hurry and ask a person for the way to the train station.
+    \begin{itemize}
+      \item If it is a 'partially correct person', then you obtain either the correct way, or an excuse that the person does not know the way.
+      \item If it is a 'totally correct person', then you obtain the correct way.
+      \item But the person might be not even partially correct $\ldots$ and you miss your train!
+    \end{itemize}
+  \end{itemize}
+  \item Partial correctness is probably more important than just ensuring termination, since it guarantees that you will not be mislead - just ask another person.
+  \item A program that does not 'crash' but produces a wrong result is generally by far more dangerous than a program that crashes and produces no result at all.
+\end{itemize}
+
+\subsection{Weakest Preconditions}
+\subsubsection{Hoare Logic and Weakest Preconditions}
+\begin{itemize}
+  \item Program verification essentially means to prove a Hoare triple $\{P\}C\{Q\}$ valid.
+  \item Hoare logic is a logic for obtaining valid Hoare triples by purely deducting reasoning, that is, by mathematical proof.
+  \item Deductive reasoning means successively applying inference rules to axioms and already obtained conclusions to obtain new conclusions.
+  \item Usually such proofs are extremely long and boring, and must therefore be performed as automatically as possible (by programs that are by themselves reliable $\ldots$)
+  \item However, the proof is undecidable in the general case - there is no algorithm for this problem that works in all cases.
+  \item But fortunately that does not stop engineers to find algorithms working in many special, but relevant, cases.
+  \item The concept of weakest preconditions helps automating verification.
+\end{itemize}
+
+\subsubsection{Hoare Triples and Weakest Preconditions}
+\begin{itemize}
+  \item Consider a Hoare triple $\{P\}C\{Q\}$.
+  \item We can begin execution of $C$ in any of all possible states. So the set of prestates is the same as the set of all possible states.
+  \item Let us partition this set of prestates into six classes:
+  \begin{itemize}
+    \item first according to $P$,
+    \item second according to termination of $C$,
+    \item third according to $Q$, provided $C$ terminates.
+  \end{itemize}
+  \begin{enumerate}
+    \item prestate satisfies $P$, execution terminates in poststate satisfying $Q$
+    \item prestate satisfies $P$, execution terminates in poststate satisfying $\neg Q$
+    \item prestate satisfies $P$, execution loops
+    \item prestate satisfies $\neg P$, execution terminates in poststate satisfying $Q$
+    \item prestate satisfies $\neg P$, execution terminates in poststate satisfying $\neg Q$
+    \item prestate satisfies $\neg P$, execution loops
+  \end{enumerate}
+  \item The Hoare triple is false in all states of class 2, and true in all states of the remaining five classes. (Truth for classes 3,4,5,6 is vacuous.)
+  \item Now consider a valid Hoare triple $\{P\}C\{Q\}$.
+  \item Here are the resulting classes:
+  \begin{enumerate}
+    \item prestate satisfies $P$, execution terminates in poststate satisfying $Q$
+    \item empty
+    \item prestate satisfies $P$, execution loops
+    \item prestate satisfies $\neg P$, execution terminates in poststate satisfying $Q$
+    \item prestate satisfies $\neg P$, execution terminates in poststate satisfying $\neg Q$
+    \item prestate satisfies $\neg P$, execution loops
+  \end{enumerate}
+  \item Now again consider an arbitrary (valid or not) Hoare triple $\{P\}C\{Q\}$.
+  \item Let us put together classes 1 and 4. Then we would have all prestates in which execution terminates in poststate satisfying $Q.$
+  \item Let us put together classes 3 and 6. Then we would have all prestates in which execution loops.
+  \item An assertion that describes exactly the classes 1,4,3,6 is called a weakest precondition of $C$ and $Q$.
+  \item Let $W$ be a weakest precondition of $C$ and $Q$. Then $\neg W$ describes exactly the classes 2 and 5 together.
+\end{itemize}
+An immediate consequence of all these definitions is the following:\\
+\textbf{Theorem 1:}\\
+Let $W$ be a weakest precondition of a Command $C$ and a postcondition $Q$. Then the Hoare triple $\{W\}C\{Q\}$ is valid. More formally: $\models \{W\}C\{Q\}$
+\begin{itemize}
+  \item Let us consider the connection between valid Hoare triples and weakest preconditions.
+  \item This connection is one of the key ideas for verification.
+\end{itemize}
+\textbf{Theorem 2:}\\
+Let $W$ be a weakest precondition of command $C$ and postcondition $Q$, and $P$ an assertion. Then: $\models \{P\}C\{Q\}$ if and only if $\models P \Rightarrow W$
+\begin{itemize}
+  \item Why is the connection between valid Hoare triples and weakest preconditions one of the key ideas of verification?
+  \item To prove a program correct w.r.t its specification essentially means to prove a corresponding Hoare triple to be valid.
+  \item Given a command and a postcondition, the weakest precondition can be mechanically determined. Caveat:
+  \begin{itemize}
+    \item At least, this is possible for commands not containing loops.
+    \item But loops require annotated invariants and correspondingly, a subtle modification of the notion of weakest precondition.
+    \item However, we will not go into these details.
+  \end{itemize}
+  \item Thus, we can prove a Hoare triple $\{P\}C\{Q\}$ valid in two steps:
+  \begin{itemize}
+    \item The programming part: Determine the weakest precondition, say $W$, of $C$ and $Q$. Then construct the implication $P \Rightarrow W$.
+    \item The mathematical part: Prove the implication $P \Rightarrow W$ valid.
+  \end{itemize}
+  \item But if the implication $P \Rightarrow W$ is not valid, then, according to our theorem, the Hoare triple $\{P\}C\{Q\}$ is not valid either.
+\end{itemize}
+
+\subsubsection{Rules of Inference}
+\begin{itemize}
+  \item Let $P_1,P_2,\ldots,P_n$ and $C$ be boolean formulas, here assertions or Hoare triples ($n\geq 0$).
+  \item An inference rule is a construct of the following form: $\frac{P_1 P_2 \ldots P_n}{C}$.
+  \item The formulas above the line are called premises, the formula below the line is called conclusion.
+  \item If there are no premises ($n=0$), the rule is called an axiom.
+  \item The inference rule is called correct, if the validity of the conclusion follows from the validity of the premises.
+\end{itemize}
+
+\subsubsection{For IML}
+Following are inference rules as well as weakest preconditions for the commands of IML:
+\begin{itemize}
+  \item skip,
+  \item assignment,
+  \item composition,
+  \item conditional, and
+  \item loop.
+\end{itemize}
+In addition, the Rule of Consequence is presented.
+This is not a rule concerning any particular command, but a rule that links programming with mathematics.
+It is of utmost importance.
+
+\subsubsubsection{Skip}
+\textbf{Theorem (Skip Axiom)}\\
+Let $P$ be an assertion. The inference rule $\frac{}{\{P\} \text{ skip } \{P\}}$ is correct.\\
+Examples:
+\begin{itemize}
+  \item [\-] $\models \{x>6\} \text{ \textbf{skip} } \{x>6\}$
+  \item [\-] $\models \{x+2>5\} \text{ \textbf{skip} } \{x+2>5\}$
+\end{itemize}
+\begin{itemize}
+  \item What about the following Hoare triples?
+  \begin{itemize}
+    \item [\-] $\{x>6\} \text{ \textbf{skip} } \{6<x\}$
+    \item [\-] $\{x+2>5\} \text{ \textbf{skip} } \{x>3\}$
+    \item [\-] $\{x^2+4x+4=0\} \text{ \textbf{skip} } \{x=-2\}$
+  \end{itemize}
+  \item The first two of them are 'obviously' valid.
+  \item However, their validity does not follow from the Skip Axiom alone: Though the two assertions $x>6$ and $6<x$ are equivalent, they are not the same assertions. (The same holds for $x+2>5$ and $x>3$.)
+  \item Assertions are syntactic objects - think of them as strings!
+  \item In fact, the third Hoare triple is valid too - but we must know something about the solution of quadratic equations.
+\end{itemize}
+
+\subsubsubsection{Rule of Consequence}
+\begin{itemize}
+  \item Obviously, some mathematical knowledge that has nothing directly to do with programming itself is required (and that not only for the third example, but also for the first two).
+  \item That knowledge must be brought into the play - and this is done with the Rule of Consequence (RoC).
+  \item The RoC allows us to plug in ordinary mathematics into Hoare logic.
+\end{itemize}
+\textbf{Theorem (Rule of Consequence)}\\
+Let $P,Q,R,S$ be assertions, and $C$ a command. The inference rule $\frac{P \Rightarrow Q \{Q\}C\{R\} R \Rightarrow S}{\{P\}C\{S\}}$ is correct.\\
+Example:
+\begin{itemize}
+  \item [\-] $\frac{x>7 \Rightarrow x>6 \{x>6\} \text{ \textbf{skip} } \{x>6\} x>6 \Rightarrow x>5}{\{x>7\} \text{ \textbf{skip} } \{x>5\}}$
+\end{itemize}
+We have three premises and one conclusion:
+\begin{itemize}
+  \item The implications $x>7 \Rightarrow x>6$ and $x>6 \Rightarrow x>5$ are premises. They are purely mathematical formulas having nothing to do with programming directly. They are both valid.
+  \item The Hoare triple $\{x>6\} \text{ \textbf{skip} } \{x>6\}$ is a premise. It is a pure programming construct having nothing to do with mathematics directly. It is valid, because of the Skip Axiom.
+  \item The Hoare triple $\{x>7\} \text{ \textbf{skip} } \{x>5\}$ is the conclusion. It is valid, because of the RoC.
+\end{itemize}
+
+\subsubsubsection{Skip and Rule of Consequence}
+This proof rewritten more concisely and much closer to normal programming:
+\begin{enumerate}
+  \item $\{x>7\}$
+  \item $\{x>6\}$
+  \item skip
+  \item $\{x>6\}$
+  \item $\{x>5\}$
+\end{enumerate}
+\begin{itemize}
+  \item Premises: We read
+  \begin{itemize}
+    \item lines 1 and 2 as implication (first premise of RoC);
+    \item lines 2 and 4 as Hoare triple (second premise of RoC);
+    \item lines 4 and 5 as implication (third premise of RoC).
+  \end{itemize}
+  \item Conclusion. We read
+  \begin{itemize}
+    \item lines 1 up to 5 as Hoare triple.
+  \end{itemize}
+  \item Two other - and shorter - proofs of the same validity:
+\end{itemize}
+\begin{enumerate}
+  \item $\{x>7\}$
+  \item skip
+  \item $\{x>7\}$
+  \item $\{x>5\}$
+\end{enumerate}
+\begin{enumerate}
+  \item $\{x>7\}$
+  \item $\{x>5\}$
+  \item skip
+  \item $\{x>5\}$
+\end{enumerate}
+\begin{itemize}
+  \item All three proofs do their job.
+  \item There is a more systematic way to obtain a proof $\rightarrow$ next section.
+\end{itemize}
+
+\subsubsubsection{General Proof Procedure}
+\begin{itemize}
+  \item To prove $\{P\}C\{Q\}$ valid, we start with the postcondition $Q$, go backwards over the command $C$ to determine a weakest precondition $W$, and construct the implication $P \Rightarrow W$.
+  \item This implication is called a verification condition (VC).
+  \item If this VC is valid, then the original Hoare triple $\{P\}C\{Q\}$ is valid too, because of the RoC.
+  \item Weakest preconditions, and thus VCs, can be determined fully automatically.
+  \item And they are the best preconditions, since they assume as little as possible to arrive at the postcondition.
+\end{itemize}
+
+\subsubsubsection{Computing Weakest Preconditions}
+\begin{itemize}
+  \item We define a function \lstinline{wp}, taking a command and an assertion as input, and producing an assertion as output.
+  \item This function, applied to a command and a postcondition, returns a weakest precondition of the given command and postcondition.
+  \item Such a function is called a predicate transformer, since it transforms a predicate (that is, an assertion) into a predicate.
+  \item So the function transforms syntactic objects into syntactic objects.
+\end{itemize}
+
+\subsubsubsection{Skip: Weakest Precondition}\\
+\textbf{Theorem (wp of skip)}\\
+Let $Q$ be an assertion. Then $wp\left( \text{\textbf{skip}},Q \right) = Q$.
+
+\subsubsubsection{General Proof Procedure}
+\begin{itemize}
+  \item Our example revisited using the general proof procedure:
+\begin{enumerate}
+  \item $\{x>7\}$ // given precondition $x>7$
+  \item $\{x>5\}$ // compute $wp\left(\text{skip}, x>5\right) = x>5$
+  \item skip      // go backwards over command skip
+  \item $\{x>5\}$ // start here with given postcondition $x>5$
+\end{enumerate}
+  \item Finally, construct the verification condition $x>7 \Rightarrow x>5$.
+\end{itemize}
+
+\subsubsubsection{Working Backwards and Software Engineering}
+\begin{itemize}
+  \item It looks strange in the first moment to start with the postcondition and go backwards to arrive at the precondition.
+  \begin{itemize}
+    \item But the postcondition describes the actual task of the program and is thus given as starting point of program development.
+    \item And the precondition will be determined to find out under which circumstances the postcondition can be established.
+  \end{itemize}
+  \item Happily, determining preconditions from postconditions is much simpler than the other way around.
+\end{itemize}
+
+\subsubsubsection{General Proof Procedure}
+\begin{itemize}
+  \item Determining VCs (via computing weakest preconditions) can be done automatically by a tool called a verification condition generator.
+  \item The VCs can then (hopefully automatically) be discharged (that is, proved valid) by a second tool called a theorem prover.
+\end{itemize}
+
+\subsubsubsection{Assignment}
+\begin{itemize}
+  \item The basic ingredient of the backwards approach is textual substitution (search and replace of a text editor).
+  \item Textual substitution however is quite subtle in presence of the bound variables occurring in quantifications.
+  \item However, we solved this problem elegantly by choosing different kinds of identifiers for program variables and bound variables.
+\end{itemize}
+
+\subsubsubsection{Textual Substitution}
+\begin{itemize}
+  \item Let $E$ and $R$ be expressions and let $v$ be a variable.
+  \item $E[v \leftarrow R]$ denotes the expression that is the same as $E$ but with all (free) occurrences of $v$ replaced by $\left(R\right)$, that is, by $R$ in parentheses, in order to maintain precedences.
+  \item This process is purely textual - the meaning of the symbols is totally irrelevant.
+\end{itemize}
+
+\subsubsubsection{Assignment}\\
+\textbf{Theorem (Assignment Axiom)}\\
+Let $Q$ be an assertion, $E$ an arithmetic expression, and $v$ a program variable. The inference rule $\frac{}{\{Q[v \leftarrow E]\} v := E\{Q\}}$ is correct.\\
+Example:
+\begin{itemize}
+  \item [\-] $\models \{ \left( x=5 \right)[x \leftarrow x+1]\} x := x+1 \{x=5\}$
+  \item [\-] perform textual substitution:
+  \item [\-] $\models \{ \left(\left(x+1\right)=5\right) \} x := x+1 \{x=5\}$
+  \item [\-] with $\models x=4 \Rightarrow \left(\left(x+1\right)=5\right)$ and the RoC we obtain:
+  \item [\-] $\models \{x=4\} x := x+1 \{x=5\}$
+\end{itemize}
+
+\begin{itemize}
+  \item Why is $\{Q[v \leftarrow E]\} v:=E\{Q\}$ valid?
+  \item Example:
+  \begin{itemize}
+    \item [\-] $\{\left(x+1\right)=7\}$
+    \item [\-] $x := x+1$
+    \item [\-] $\{x=7\}$
+  \end{itemize}
+  \item Execution of the assignment command just renames the value of $x+1$ in the prestate to the value $x$ in the poststate.
+  \begin{itemize}
+    \item In other words: What was called $x+1$ in the prestate is called $x$ in the poststate.
+  \end{itemize}
+  \item More generally: What was called $E$ in the prestate is called $v$ in the poststate.
+  \begin{enumerate}
+    \item Example:
+    \begin{itemize}
+      \item [\-] $\models \{\left(x=5\right)[x \leftarrow 5]\} x := 5 \{x=5\}$
+      \item [\-] $\models \{\left(5=5\right) x := 5 \{x=5\}\}$
+      \item [\-] $\frac{\text{true} \Rightarrow 5=5 \{\left(5=5\right)\} x := 5 \{x=5\}}{\{\text{true}\} x := 5 \{x=5\}}$
+    \end{itemize}
+    \item Example:
+    \begin{itemize}
+      \item [\-] $\models \{\left(x\neq 5\right)[x \leftarrow 5]\} x := 5 \{x\neq 5\}$
+      \item [\-] $\models \{\left(5\neq 5\right)\} x := 5 \{x\neq 5\}$
+      \item [\-] $\frac{\text{false} \Rightarrow 5\neq 5 \{\left(5\neq 5\right)\} x := 5 \{x \neq 5\}}{\{\text{false}\} x := 5 \{x \neq 5\}}$
+    \end{itemize}
+    \item Example:
+    \begin{itemize}
+      \item [\-] $\models \{\left(x^4=256\right)[x \leftarrow x\cdot x]\} x := x \cdot x \{x^4 = 256\}$
+      \item [\-] $\models \{\left(x \cdot x\right)^4=256\} x := x \cdot x \{x^4=256\}$
+      \item [\-] $\frac{x^8=256 \Rightarrow \left(x \cdot x\right)^4=256 \{\left(x \cdot x\right)^4=256\} x := x \cdot x \{x^4=256\}}{\{x^8=256\} x := x \cdot x \{x^4=256\}}$
+    \end{itemize}
+  \end{enumerate}
+\end{itemize}
+
+\subsubsubsection{Assignment: Weakest Precondition}\\
+\textbf{Theorem (wp of assignment)}\\
+Let $Q$ be an assertion, $E$ an arithmetic expression, and $v$ a program variable. Then $wp(v := E,Q) = Q[v \leftarrow E]$.
+
+\subsubsubsection{Composition}
+
+
+\end{multicols}

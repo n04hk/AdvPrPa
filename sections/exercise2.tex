@@ -1,0 +1,104 @@
+\textbf{Types of numeric literals}\\
+Which expressions are correctly typed?\\
+\begin{tabularx}{\linewidth}{|l|X|}
+  \hline
+  \lstinline|2| & \lstinline|Num p => p|\\
+  \hline
+  \lstinline|2 + 2| & \lstinline|Num a => a|\\
+  \hline
+  \lstinline|2 :: Int| & \lstinline|Int|\\
+  \hline
+  \lstinline|2 :: Float| & \lstinline|Float|\\
+  \hline
+  \lstinline|(2 + 2) :: Double| & \lstinline|Double|\\
+  \hline
+  \lstinline|2.0| & \lstinline|Fractional p => p|\\
+  \hline
+  \lstinline|2.0 :: Int| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|2 + 2.0| & \lstinline|Fractional a => a|\\
+  \hline
+  \lstinline|(2 :: Int) + (2 :: Double)| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|(2 :: Int) + 2| & \lstinline|Int|\\
+  \hline
+  \lstinline|(2, 2)| & \lstinline|(Num a, Num b) => (a, b)|\\
+  \hline
+  \lstinline|[2, 2]| & \lstinline|Num a => [a]|\\
+  \hline
+  \lstinline|[2, 2.0]| & \lstinline|Fractional a => [a]|\\
+  \hline
+  \lstinline|[2 :: Float, 2 :: Double| & \textbf{Not correct.}\\
+  \hline
+\end{tabularx}
+
+
+\textbf{Types of overloaded functions}\\
+Given the declarations:
+\begin{lstlisting}
+f1 x = 2
+f2 x = 2*x
+f3 x y z = x == y && y == z
+f4 x y z = x < y && y < z
+f5 x y z = x == y && y < z
+f6 x y = 2 * x < y
+f7 x y = min (abs x) (negate y)
+f8 x y = [x, y, 2]
+f9 x y = x 'div' y + x / y
+\end{lstlisting}
+Which expressions are correctly typed?\\
+\begin{tabularx}{\linewidth}{|X|X|}
+  \hline
+  \lstinline|f1| & \lstinline|Num p1 => p2 -> p1|\\
+  \hline
+  \lstinline|f1 'a'| & \lstinline|Num p1 => p1|\\
+  \hline
+  \lstinline|f1 "a"| & \lstinline|Num p1 => p1|\\
+  \hline
+  \lstinline|f1 f1| & \lstinline|Num p1 => p1|\\
+  \hline
+  \lstinline|f2| & \lstinline|Num a => a -> a|\\
+  \hline
+  \lstinline|f2 2| & \lstinline|Num a => a|\\
+  \hline
+  \lstinline|f2 2.0| & \lstinline|Fractional a => a|\\
+  \hline
+  \lstinline|f2 'a'| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|('a', 'b') == ('c', 'd')| & \lstinline|Bool|\\
+  \hline
+  \lstinline|('a', 'b') < ('c', 'd')| & \lstinline|Bool|\\
+  \hline
+  \lstinline|('a', 'b') < ('c', 'd', 'e')| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|['a', 'b'] < ['c', 'd', 'e']| & \lstinline|Bool|\\
+  \hline
+  \lstinline|f3| & \lstinline|Eq a => a -> a -> a -> Bool|\\
+  \hline
+  \lstinline|f3 ('a', 'b') ('a', 'b') ('a', 'b')| & \lstinline|Bool|\\
+  \hline
+  \lstinline|f4| & \lstinline|Ord a => a -> a -> a -> Bool|\\
+  \hline
+  \lstinline|f4 2 2| & \lstinline|(Ord a, Num a) => a -> Bool|\\
+  \hline
+  \lstinline|f5| & \lstinline|Ord a => a -> a -> a -> Bool|\\
+  \hline
+  \lstinline|f5 [2] [] [2,2]| & \lstinline|Bool|\\
+  \hline
+  \lstinline|f6| & \lstinline|(Ord a, Num a) => a -> a -> Bool|\\
+  \hline
+  \lstinline|(f6) 2| & \lstinline|(Ord a, Num a) => a -> Bool|\\
+  \hline
+  \lstinline|f7| & \lstinline|(Ord a, Num a) => a -> a -> a|\\
+  \hline
+  \lstinline|f7 (2 :: Int) (2 :: Integer)| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|f8| & \lstinline|Num a => a -> a -> [a]|\\
+  \hline
+  \lstinline|f8 2 2.0| & \lstinline|Fractional a => [a]|\\
+  \hline
+  \lstinline|f9| & \lstinline|(Integral a, Fractional a) => a -> a -> a|\\
+  \hline
+  \lstinline|f9 2 2| & \lstinline|(Integral a, Fractional a) => a|\\
+  \hline
+\end{tabularx}

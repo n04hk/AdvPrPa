@@ -62,7 +62,7 @@ $f(x)g(y)$ & \lstinline|f x * g y| \\
 \end{itemize}
 
 \subsubsection{My First Script}
-\begin{lstlisting}
+\begin{lstlisting}[multicols=2]
 double x = x + x
 quadruple x = double (double x)
 factorial n = product [1..n]
@@ -938,4 +938,77 @@ For example (abbreviating qsort as q):
 %TODO: insert image
 
 
+\subsection{Exercises:}
+
+\subsubsection{Exercise 1}
+\input{sections/exercise1}
 \end{multicols}
+\textbf{Programming Exercise: two-dimensional vectors}\\
+\lstinputlisting{listings/exercises/AdvPrPa_Exer01Sol_V01.hs}
+\newpage
+\begin{multicols}{2}
+
+\subsubsection{Exercise 2}
+\input{sections/exercise2}
+\end{multicols}
+\textbf{Programming Exercise: List comprehensions}\\
+\lstinputlisting{listings/exercises/AdvPrPa_Exer02Sol_V01.hs}
+\newpage
+\begin{multicols}{2}
+
+\subsubsection{Exercise 3}
+\input{sections/exercise3}
+\end{multicols}
+\textbf{Programming Exercise: Recursion over lists}\\
+\lstinputlisting{listings/exercises/AdvPrPa_Exer03Sol_V01.hs}
+\newpage
+\begin{multicols}{2}
+
+\subsubsection{Exercise 4}
+\input{sections/exercise4}
+
+\end{multicols}
+\subsubsection{Exercise 7}
+\lstinputlisting{listings/exercises/Exercise07Solution.hs}
+\textbf{Higer-Order Functions: Types}\\
+\begin{tabularx}{\linewidth}{|X|X|}
+  \hline
+  \lstinline|f01 = curry . fst| & \lstinline|((a, b1) -> c, b2) -> a -> b1 -> c|\\
+  \hline
+  \lstinline|f02 = uncurry . fst| & \lstinline|(a -> b1 -> c, b2) -> (a, b1) -> c|\\
+  \hline
+  \lstinline|f03 = fst . curry| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|f04 = fst . uncurry| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|f05 = curry . curry| & \lstinline|(((a, b1), b2) -> c) -> a -> b1 -> b2 -> c|\\
+  \hline
+  \lstinline|f06 map ($5)| & \lstinline|Num a => [a -> b] -> [b]|\\
+  \hline
+  \lstinline|v07 = map ($5) [(+1), (*2)| & \lstinline|Num b => [b]|\\
+   & \lstinline|[6,10]|\\
+  \hline
+\end{tabularx}
+
+\textbf{Programming Exercise: Higher-order function}\\
+\lstinputlisting{listings/exercises/AdvPrPa_Exer04Sol_V01.hs}
+\newpage
+
+\subsubsection{Exercise 8}
+\lstinputlisting{listings/exercises/Exercise08Solution.hs}
+
+\subsubsection{Hutton Exercises}
+\textbf{Hutton02}\\
+\lstinputlisting{listings/exercises/HaskellHutton02.hs}
+\textbf{Hutton03}\\
+\lstinputlisting{listings/exercises/HaskellHutton03.hs}
+\textbf{Hutton04}\\
+\lstinputlisting{listings/exercises/HaskellHutton04.hs}
+\textbf{Hutton05}\\
+\lstinputlisting{listings/exercises/HaskellHutton05.hs}
+\textbf{Hutton06}\\
+\lstinputlisting{listings/exercises/HaskellHutton06.hs}
+
+\textbf{Programming Exercises: Higher-order functions and recursion}\\
+\lstinputlisting{listings/exercises/AdvPrPa_Exer05Sol_V01.hs}
+

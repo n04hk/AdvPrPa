@@ -1,0 +1,185 @@
+\textbf{List sugaring}\\
+Rewrite the expressions so they don't contain the constrctor \lstinline|:| (cons) any longer:\\
+\begin{tabularx}{\linewidth}{|X|X|}
+  \hline
+  \lstinline|1:2:3:[4]| & \lstinline|[1,2,3,4]|\\
+  \hline
+  \lstinline|1:2:[3,4]| & \lstinline|[1,2,3,4]|\\
+  \hline
+  \lstinline|(1:2:[]):(3:[]):[]| & \lstinline|[[1,2],3]|\\
+  \hline
+  \lstinline|(1,2):(3,4):[(5,6)]| & \lstinline|[(1,2),(3,4),(5,6)]|\\
+  \hline
+  \lstinline|[] : []| & \lstinline|[[]]|\\
+  \hline
+  \lstinline|[] : [] : []| & \lstinline|[[],[]]|\\
+  \hline
+  \lstinline|([] : []) : []| & \lstinline|[[[]]]|\\
+  \hline
+  \lstinline|(([] : []) : []) : []| & \lstinline|[[[[]]]]|\\
+  \hline
+  \lstinline|'a' : 'b' : []| & \lstinline|"ab"|\\
+  \hline
+\end{tabularx}
+
+\textbf{List desugaring}\\
+Rewrite the expressions so they contain the square brackets only as list constructor \lstinline|[]| (nil):\\
+\begin{tabularx}{\linewidth}{|X|X|}
+  \hline
+  \lstinline|[1,2,3]| & \lstinline|1 : 2 : [3]|\\
+  \hline
+  \lstinline|[[1,2],[],[3,4]]| & \lstinline|(1:2:[]):([]):(3:4:[]):[]|\\
+  \hline
+  \lstinline|[[], ["a"], [[]]]| & \lstinline|???|\\ %TODO: don't know
+  \hline
+\end{tabularx}
+
+\textbf{Pattern Matching}\\
+Given the function and value declarations, give the type of each function and evaluate the expressions in the value declarations.\\
+\begin{tabularx}{\linewidth}{|l|X|}
+  \hline
+  \lstinline|f1 (x : y : z) = (x, y, z)| & \lstinline|[b] -> (b, b, [b])|\\
+  \hline
+  \lstinline|f2 [x, y] = (x, y)| & \lstinline|[b] -> (b, b)|\\
+  \hline
+  \lstinline|f3 (x : y : []) = (x, y)| & \lstinline|[b] -> (b, b)|\\
+  \hline
+  \lstinline|a11 = f1 []| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|a21 = f2 []| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|a31 = f3 []| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|a12 = f1 [1]| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|a22 = f2 [1]| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|a32 = f3 [1]| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|a13 = f1 [1, 2]| & \lstinline|(1,2,[])|\\
+  \hline
+  \lstinline|a23 = f2 [1, 2]| & \lstinline|(1,2)|\\
+  \hline
+  \lstinline|a33 = f3 [1, 2]| & \lstinline|(1,2)|\\
+  \hline
+  \lstinline|a14 = f1 [1, 2, 3]| & \lstinline|(1,2,[3])|\\
+  \hline
+  \lstinline|a24 = f2 [1, 2, 3]| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|a34 = f3 [1, 2, 3]| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|a15 = f1 (1 : 2 : 3 : [])| & \lstinline|(1,2,[3])|\\
+  \hline
+  \lstinline|a25 = f2 (1 : 2 : 3 : [])| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|a35 = f3 (1 : 2 : 3 : [])| & \textbf{Not correct.}\\
+  \hline
+  \lstinline|a16 = f1 ['a', 'b', 'c']| & \lstinline|('a', 'b', "c")|\\
+  \hline
+  \lstinline|a17 = f1 [[1], [2,3],[]]| & \lstinline|([1], [2,3], [[]])|\\
+  \hline
+  \lstinline|a18 = f1 (1 : 2 : 3 : [4,5])| & \lstinline|(1, 2, [3,4,5])|\\
+  \hline
+  \lstinline|a19 = f1 [1 .. 100]| & \lstinline|(1,2,[3,4,...,100])|\\
+  \hline
+\end{tabularx}
+\begin{tabularx}{\linewidth}{|l|X|}
+  \hline
+  \lstinline|f4 (x, y) = [x, y]| & \lstinline|(a, a) -> [a]|\\
+  \hline
+  \lstinline|a41 = f4 ([1, 2], [3, 4, 5])| & \lstinline|[[1,2],[3,4,5]]|\\
+  \hline
+\end{tabularx}
+\begin{tabularx}{\linewidth}{|l|X|}
+  \hline
+  \lstinline|g1 = "dimdi" = 1| & \\
+  \hline
+  \lstinline|g1 ['d', 'o', 'm', 'd', 'o'] = 2| & \\
+  \hline
+  \lstinline|g1 ('d' : 'i' : 'n' : 'g' : []) = 3| & \\
+  \hline
+  \lstinline|g1 ('d' : 'i' : 'n' : 'g' : _) = 4| & \\
+  \hline
+  \lstinline|g1 (x : y) = 5| & \\
+  \hline
+  \lstinline|g1 _ = 6| & \\
+  \hline
+  \lstinline|b11 = g1 "domdo"| & \lstinline|2|\\
+  \hline
+  \lstinline|b12 = g1 "ding"| & \lstinline|3|\\
+  \hline
+  \lstinline|b13 = g1 "dingdimdi"| & \lstinline|4|\\
+  \hline
+  \lstinline|b14 = g1 "dumdu"| & \lstinline|5|\\
+  \hline
+  \lstinline|b15 = g1 ""| & \lstinline|6|\\
+  \hline
+\end{tabularx}
+\begin{tabularx}{\linewidth}{|l|X|}
+  \hline
+  \lstinline|g2 (d : "imdi") \| d == 'd' \|\| d == 'D' = 1| & \\%special formatting
+  \hline
+  \lstinline|g2 (z : "umsel") \| z == 'z' \|\| z == 'Z' = 2| & \\%special formatting
+  \hline
+  \lstinline|g2 _ = 3| & \\
+  \hline
+  \lstinline|b21 = g2 "dimdi"| & \lstinline|1|\\
+  \hline
+  \lstinline|b22 = g2 ['D', 'i', 'm', 'd', 'i']| & \lstinline|1|\\
+  \hline
+  \lstinline|b23 = g2 ('Z' : 'u' : "msel")| & \lstinline|2|\\
+  \hline
+  \lstinline|b24 = g2 "dimdiding"| & \lstinline|3|\\
+  \hline
+\end{tabularx}
+\begin{tabularx}{\linewidth}{|l|X|}
+  \hline
+  \lstinline|h1 ['a', 'b'] = 'a'| & \\
+  \hline
+  \lstinline|h1 ['a', b] = b| & \\
+  \hline
+  \lstinline|h1 (_ : _ : 'm' : _) = 'm'| & \\
+  \hline
+  \lstinline|h1 (a : b) = a| & \\
+  \hline
+  \lstinline|c11 = h1 "ab"| & \lstinline|'a'|\\
+  \hline
+  \lstinline|c12 = h1 "ac"| & \lstinline|'c'|\\
+  \hline
+  \lstinline|c13 = h1 "dimdi"| & \lstinline|'m'|\\
+  \hline
+  \lstinline|c14 = h1 "zumsel"| & \lstinline|'m'|\\
+  \hline
+  \lstinline|c15 = h1 "schnurpsel"| & \lstinline|'s'|\\
+  \hline
+\end{tabularx}
+\begin{tabularx}{\linewidth}{|l|X|}
+  \hline
+  \lstinline|h2 [(a, b), c] = c| & \\
+  \hline
+  \lstinline|h2 (a : b : c) = a| & \\
+  \hline
+  \lstinline|c21 = h2 [(1, 2), (3, 4)]| & \lstinline|(3,4)|\\
+  \hline
+  \lstinline|c22 = h2 [(1, 2), (3, 4), (5, 6)]| & \lstinline|(1,2)|\\
+  \hline
+  \lstinline|c23 = h2 [(1, 2)]| & \textbf{Not correct.}\\
+  \hline
+\end{tabularx}
+\begin{tabularx}{\linewidth}{|X|X|}
+  \hline
+  \lstinline|h3 ((x : y) : z) = y| & \\
+  \hline
+  \lstinline|h3 ([] : _) = "2"| & \\
+  \hline
+  \lstinline|h3 [] = "3"| & \\
+  \hline
+  \lstinline|c31 = h3 ["dimdi"]| & \lstinline|"imdi"|\\
+  \hline
+  \lstinline|c32 = h3["", "dimdi", "domdo"]| & \lstinline|"2"|\\
+  \hline
+  \lstinline|c33 = h3 [[]]| & \lstinline|"2"|\\
+  \hline
+  \lstinline|c34 = h3 []| & \lstinline|"3"|\\
+  \hline
+\end{tabularx}
