@@ -1521,10 +1521,352 @@ solution e ns n = elem (values e) (choices ns)
 \end{lstlisting}
 
 \subsubsection{Brute force solution}
+Return a list of all possible ways of splitting a list into two non-empty parts:
+\begin{lstlisting}
+split :: [a] -> [([a],[a])]
+\end{lstlisting}
+
+For example:
+\begin{lstlisting}
+> split [1,2,3,4]
+[([1], [2,3,4]),([1,2],[3,4]),([1,2,3],[4])]
+\end{lstlisting}
+
+Return a list of all possible expressions whose values are precisely a given list of numbers:
+\begin{lstlisting}
+exprs :: [Int] -> [Expr]
+exprs []  = []
+exprs [n] = [Val n]
+exprs ns  = [e | (ls,rs) <- split ns
+               , l       <- exprs ls
+               , r       <- exprs rs
+               , e       <- combine l r]
+\end{lstlisting}
+The key function in this lecture.
+
+Combine two expressions using each operator:
+\begin{lstlisting}
+combine :: Expr -> Expr -> [Epxr]
+combine l r =
+  [App o l r | o <- [Add,Sub,Mul,Div]]
+\end{lstlisting}
+
+Return a list of all possible expressions that solve an instance of the countdown problem:
+\begin{lstlisting}
+solutions :: [Int] -> Int -> [Expr]
+solutions ns n = [e | ns' <- choices ns
+                    , e   <- exprs ns'
+                    , eval e == [n]]
+\end{lstlisting}
+
+\subsubsection{How fast is it?}
+\begin{description}
+  \item[System] 2.8GHz Core 2 Duo, 4GB RAM
+  \item[Compiler] GHC version 7.10.2
+  \item[Example] \lstinline{solutions [1,3,7,10,25,50] 765}
+  \item[One solution] 0.108 seconds
+  \item[All solutions] 12.224 seconds     
+\end{description}
+
+\subsubsection{Can we do better?}
+\begin{itemize}
+  \item Many of the expressions that are considered will typically be invalid - fail to evaluate.
+  \item For our example, only around 5 million of the 33 million possible expressions are valid.
+  \item Combining generation with evaluation would allow earlier rejection of invalid expressions.
+\end{itemize}
+
+\subsubsection{Fusing two functions}
+Valid expressions and their values:
+\begin{lstlisting}
+type Result = (Expr,Int)
+\end{lstlisting}
+
+We seek to define a function that fuses together the generation and evaluation of expressions:
+\begin{lstlisting}
+results :: [Int] -> [Result]
+results ns = [(e,n) | e <- exprs ns
+                    , n <- eval e]
+\end{lstlisting}
+
+This behaviour is achieved by defining
+\begin{lstlisting}
+results []  = []
+results [n] = [(Val n,n) | n > 0]
+results ns =
+  [res | (ls,rs) <- split ns
+       , lx      <- results ls
+       , ry      <- results rs
+       , res     <- combine' lx ry]
+\end{lstlisting}
+where
+\begin{lstlisting}
+combine' :: Result -> Result -> [Result]
+\end{lstlisting}
+
+Combining results:
+\begin{lstlisting}
+combine' (l,x) (r,y) =
+  [(App o l r, apply o x y)
+    | o <- [Add,Sub,Mul,Div]
+    , valid o x y]
+\end{lstlisting}
+New function that solves countdown problems:
+\begin{lstlisting}
+solutions' :: [Int] -> Int -> [Expr]
+solutions' ns n =
+  [e | ns'   <- choices ns
+     , (e,m) <- results ns'
+     , m == n]
+\end{lstlisting}
+
+\subsubsection{How fast is it now?}
+\begin{description}
+  \item[Example] \lstinline{solutions' [1,3,7,10,25,50] 765}
+  \item[One solution] 0.014 seconds
+  \item[All solutions] 1.312 seconds   
+\end{description}
+Around 10 times faster in both cases.
+
+\subsubsection{Can we do better?}
+\begin{itemize}
+  \item Many expressions will be essentially the same using simple arithmetic properties, such as:
+\begin{lstlisting}
+x * y = y * x
+x * 1 = x
+\end{lstlisting}
+  \item Exploiting such properties would considerably reduce the search and solution spaces.
+\end{itemize}
+
+\subsubsection{Exploiting properties}
+Strengthening the valid predicate to take account of commutativity and identity properties:
+\begin{lstlisting}
+valid :: Op -> Int -> Int -> Bool
+valid Add x y = x <= y
+valid Sub x y = x > y
+valid Mul x y = x <= y && x /= 1 && y /= 1
+valid Div x y = x `mod` y == 0 && y /= 1
+\end{lstlisting}
+
+\subsubsection{How fast is it now?}
+\begin{description}
+  \item[Example] \lstinline{solutions'' [1,3,7,10,25,50] 765}
+  \item[Valid] 250000 expressions (around 20 times less)
+  \item[Solutions] 49 expressions (around 16 times less)
+  \item[One solution] 0.007 seconds (around 2 times faster)
+  \item[All solutions] 0.119 seconds (around 11 times faster)   
+\end{description}
+
+More generally, our program usefully returns all solutions in a fraction of a second, and is around 100 times faster than the original version.
 
 
+\subsection{Lazy evaluation}
+\subsubsection{Introduction}
+Expressions in Haskell are evaluated using a simple technique called lazy evaluation, which:
+\begin{itemize}
+  \item Avoids doing unnecessary evaluation;
+  \item Ensures termination whenever possible;
+  \item Supports programming with infinite lists;
+  \item Allows programs to be more modular.
+\end{itemize}
 
+\subsubsection{Evaluating expressions}
+\begin{lstlisting}
+square n = n * n
+\end{lstlisting}
 
+Example:
+\begin{tabularx}{\linewidth}{lX}
+  & \lstinline{square (1+2)}\\
+  \(=\) & \tiny{Apply \lstinline{+} first.}\\
+  & \lstinline{square 3}\\
+  \(=\) & \\
+  & \lstinline{3 * 3}\\
+  \(=\) & \\
+  & \lstinline{9}\\
+\end{tabularx}
+
+Another evaluation order is also possible:
+\begin{tabularx}{\linewidth}{lX}
+  & \lstinline{square (1+2)}\\
+  \(=\) & \tiny{Apply \lstinline{square} first.}\\
+  & \lstinline{(1+2) * (1+2)}\\
+  \(=\) & \\
+  & \lstinline{3 * (1+2)}\\
+  \(=\) & \\
+  & \lstinline{3 * 3}\\
+  \(=\) & \\
+  & \lstinline{9}\\
+\end{tabularx}
+
+Any way of evaluating the same expression will give the same result, provided it terminates.
+
+\subsubsection{Evaluation strategies}
+There are two main strategies for decoding which reducible expression (redex) to consider next:
+\begin{itemize}
+  \item Choose a redex that is innermost, in the sense that does not contain another redex;
+  \item Choose a redex that is outermost, in the sense that it is not contained in another redex.
+\end{itemize}
+
+\subsubsection{Termination}
+\begin{lstlisting}
+infinity = 1 + infinity
+\end{lstlisting}
+
+Example:\\
+\begin{tabularx}{\linewidth}{lX}
+  & \lstinline{fst (0,infinity)}\\
+  \(=\) & \tiny{Innermost evaluation.}\\
+  & \lstinline{fst (0,1+infinity)}\\
+  \(=\) & \\
+  & \lstinline{fst (0,1+(1+infinity))}\\
+  \(=\) & \\
+  & \(\vdots\)\\
+  \(=\) & \\
+  & \lstinline{fst (0,infinity)}\\
+  \(=\) & \tiny{Outermost evaluation.}\\
+  & \lstinline{0}\\
+\end{tabularx}
+
+Note:
+\begin{itemize}
+  \item Outermost evaluation may give a result when innermost evaluation fails to terminate;
+  \item If any evaluation sequence terminates, then so does outermost, with the same result.
+\end{itemize}
+
+\subsubsection{Number of reductions}
+For \lstinline{square} example:
+\begin{itemize}
+  \item Innermost: 3 steps
+  \item Outermost: 4 steps
+\end{itemize}
+
+Note:
+\begin{itemize}
+  \item The outmost version is inefficient, because the argument \lstinline{1+2} is duplicated when \lstinline{square} is applied and is hence evaluated twice.
+  \item Due to such duplication, outermost evaluation may require more steps than innermost.
+  \item This problem can easily be avoided by using pointers to indicate sharing of arguments.
+\end{itemize}
+
+Example:\\
+\begin{tabularx}{\linewidth}{lX}
+  & \lstinline{square (1+2)}\\
+  \(=\) & \\
+  & \lstinline{* 1+2}\\
+  \(=\) & \\
+  & \lstinline{* 3}\\
+  \(=\) & \tiny{Shared argument evaluated once.}\\
+  & \lstinline{9}\\
+\end{tabularx}
+
+This gives a new evaluation strategy:\\
+lazy evaluation = outermost evaluation \(+\) sharing of arguments
+
+Note:
+\begin{itemize}
+  \item Lazy evaluation ensures termination whenever possible, but never requires more steps than innermost evaluation and sometimes fewer.
+\end{itemize}
+
+\subsubsection{Infinite lists}
+\begin{lstlisting}
+ones = 1 : ones
+\end{lstlisting}
+
+Example:
+\begin{tabularx}{\linewidth}{lX}
+  & \lstinline{ones}\\
+  \(=\) & \\
+  & \lstinline{1 : ones}\\
+  \(=\) & \\
+  & \lstinline{1 : (1 : ones)}\\
+  \(=\) & \\
+  & \(\vdots\)\\
+  \(=\) & \tiny{An infinite list of ones.}\\
+\end{tabularx}
+
+What happens if we select the first element?
+\begin{itemize}
+  \item Innermost: does not terminate
+  \item Lazy: terminates in 2 steps
+\end{itemize}
+
+Note:
+\begin{itemize}
+  \item In the lazy case, only the first element of ones is produced, as the rest are not required.
+  \item In general, with lazy evaluation expressions are only evaluated as much as required by the context in which they are used.
+  \item Hence, \lstinline{ones} is really a potentially infinite list.
+\end{itemize}
+
+\subsubsection{Modular programming}
+Lazy evaluation allows us to make programs more modular by separation control from data.
+\begin{lstlisting}
+> take 5 ones
+[1,1,1,1,1]
+\end{lstlisting}
+The data part \lstinline{ones} is only evaluated as much as required by the control part \lstinline{take 5}.
+
+Whitout using lazy evaluation the control and data parts would need to be combined into one:
+\begin{lstlisting}
+replicate :: Int -> a -> [a]
+replicate 0 _ = []
+replicate n x = x : replicate (n-1) x
+\end{lstlisting}
+
+Example:\\
+\begin{lstlisting}
+> replicate 5 1
+[1,1,1,1,1]
+\end{lstlisting}
+
+\subsubsection{Generating primes}
+To generate the infininte sequence of primes:
+\begin{enumerate}
+  \item Write down the infinite sequence \(2,3,4,\ldots\);
+  \item Mark the first number \(p\) as being prime;
+  \item Delete all multiples of \(p\) from the sequence;
+  \item Return to seconde step.
+\end{enumerate}
+
+This idea can be driectly translated into a program that generates the infinite list of primes!
+\begin{lstlisting}
+primes :: [Int]
+primes = sieve[2..]
+
+sieve :: [Int] -> [Int]
+sieve (p:xs) = 
+  p : sieve [x | x <- xs, mod x p /= 0]
+\end{lstlisting}
+
+Examples:
+\begin{lstlisting}
+> primes
+[2,3,5,7,11,13,17,19,..]
+\end{lstlisting}
+
+\begin{lstlisting}
+> take 10 primes
+[2,3,5,7,11,13,17,19,23,29]
+\end{lstlisting}
+
+\begin{lstlisting}
+> takeWhile (<10) primes
+[2,3,5,7]
+\end{lstlisting}
+
+We can also use \lstinline{primes} to generate an (infinite?) list of twin primes that differ by precisely two.
+\begin{lstlisting}
+twin :: (Int,Int) -> Int
+twin (x,y) = y == x+2
+\end{lstlisting}
+
+\begin{lstlisting}
+twins :: [(Int,Int)]
+twins = filter twin (zip primes (tail primes))
+\end{lstlisting}
+
+\begin{lstlisting}
+> twins
+[(3,5),(5,7),(11,13),(17,19),(29,31),..]
+\end{lstlisting}
 
 
 \newpage
